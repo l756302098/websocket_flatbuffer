@@ -1,0 +1,35 @@
+namespace abby;
+
+table ClientA {
+	price:double;
+	name:string;
+}
+
+table ClientB {
+	name:string;
+	age:int;
+}
+
+table ClientC {
+	name:string;
+	weight:int;
+}
+
+enum ClientType: byte {
+    ClientA = 0,
+    ClientB,
+	ClientC,
+}
+
+union ClientField {
+    ClientA,
+    ClientB,
+	ClientC,
+}
+
+table ClientData {
+    type : ClientType;
+    message: ClientField;
+}
+
+root_type ClientData;

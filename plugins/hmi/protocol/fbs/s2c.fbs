@@ -1,0 +1,35 @@
+namespace abby;
+
+table ServerA {
+	price:double;
+	name:string;
+}
+
+table ServerB {
+	name:string;
+	age:int;
+}
+
+table ServerC {
+	name:string;
+	weight:int;
+}
+
+enum ServerType: byte {
+    ServerA = 0,
+    ServerB,
+	ServerC,
+}
+
+union ServerField {
+    ServerA,
+    ServerB,
+	ServerC,
+}
+
+table ServerData {
+    type : ServerType;
+    message: ServerField;
+}
+
+root_type ServerData;

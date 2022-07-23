@@ -15,21 +15,14 @@ table ServerC {
 	weight:int;
 }
 
-enum ServerType: byte {
-    ServerA = 0,
-    ServerB,
-	ServerC,
-}
-
-union ServerField {
+union ServerType {
     ServerA,
     ServerB,
 	ServerC,
 }
 
 table ServerData {
-    type : ServerType;
-    message: ServerField;
+    message: ServerType;
 }
 
 root_type ServerData;

@@ -24,16 +24,18 @@ struct ServerData;
 struct ServerDataBuilder;
 struct ServerDataT;
 
-enum ServerType : int8_t {
-  ServerType_ServerA = 0,
-  ServerType_ServerB = 1,
-  ServerType_ServerC = 2,
-  ServerType_MIN = ServerType_ServerA,
+enum ServerType : uint8_t {
+  ServerType_NONE = 0,
+  ServerType_ServerA = 1,
+  ServerType_ServerB = 2,
+  ServerType_ServerC = 3,
+  ServerType_MIN = ServerType_NONE,
   ServerType_MAX = ServerType_ServerC
 };
 
-inline const ServerType (&EnumValuesServerType())[3] {
+inline const ServerType (&EnumValuesServerType())[4] {
   static const ServerType values[] = {
+    ServerType_NONE,
     ServerType_ServerA,
     ServerType_ServerB,
     ServerType_ServerC
@@ -42,41 +44,6 @@ inline const ServerType (&EnumValuesServerType())[3] {
 }
 
 inline const char * const *EnumNamesServerType() {
-  static const char * const names[4] = {
-    "ServerA",
-    "ServerB",
-    "ServerC",
-    nullptr
-  };
-  return names;
-}
-
-inline const char *EnumNameServerType(ServerType e) {
-  if (flatbuffers::IsOutRange(e, ServerType_ServerA, ServerType_ServerC)) return "";
-  const size_t index = static_cast<size_t>(e);
-  return EnumNamesServerType()[index];
-}
-
-enum ServerField : uint8_t {
-  ServerField_NONE = 0,
-  ServerField_ServerA = 1,
-  ServerField_ServerB = 2,
-  ServerField_ServerC = 3,
-  ServerField_MIN = ServerField_NONE,
-  ServerField_MAX = ServerField_ServerC
-};
-
-inline const ServerField (&EnumValuesServerField())[4] {
-  static const ServerField values[] = {
-    ServerField_NONE,
-    ServerField_ServerA,
-    ServerField_ServerB,
-    ServerField_ServerC
-  };
-  return values;
-}
-
-inline const char * const *EnumNamesServerField() {
   static const char * const names[5] = {
     "NONE",
     "ServerA",
@@ -87,42 +54,42 @@ inline const char * const *EnumNamesServerField() {
   return names;
 }
 
-inline const char *EnumNameServerField(ServerField e) {
-  if (flatbuffers::IsOutRange(e, ServerField_NONE, ServerField_ServerC)) return "";
+inline const char *EnumNameServerType(ServerType e) {
+  if (flatbuffers::IsOutRange(e, ServerType_NONE, ServerType_ServerC)) return "";
   const size_t index = static_cast<size_t>(e);
-  return EnumNamesServerField()[index];
+  return EnumNamesServerType()[index];
 }
 
-template<typename T> struct ServerFieldTraits {
-  static const ServerField enum_value = ServerField_NONE;
+template<typename T> struct ServerTypeTraits {
+  static const ServerType enum_value = ServerType_NONE;
 };
 
-template<> struct ServerFieldTraits<abby::ServerA> {
-  static const ServerField enum_value = ServerField_ServerA;
+template<> struct ServerTypeTraits<abby::ServerA> {
+  static const ServerType enum_value = ServerType_ServerA;
 };
 
-template<> struct ServerFieldTraits<abby::ServerB> {
-  static const ServerField enum_value = ServerField_ServerB;
+template<> struct ServerTypeTraits<abby::ServerB> {
+  static const ServerType enum_value = ServerType_ServerB;
 };
 
-template<> struct ServerFieldTraits<abby::ServerC> {
-  static const ServerField enum_value = ServerField_ServerC;
+template<> struct ServerTypeTraits<abby::ServerC> {
+  static const ServerType enum_value = ServerType_ServerC;
 };
 
-struct ServerFieldUnion {
-  ServerField type;
+struct ServerTypeUnion {
+  ServerType type;
   void *value;
 
-  ServerFieldUnion() : type(ServerField_NONE), value(nullptr) {}
-  ServerFieldUnion(ServerFieldUnion&& u) FLATBUFFERS_NOEXCEPT :
-    type(ServerField_NONE), value(nullptr)
+  ServerTypeUnion() : type(ServerType_NONE), value(nullptr) {}
+  ServerTypeUnion(ServerTypeUnion&& u) FLATBUFFERS_NOEXCEPT :
+    type(ServerType_NONE), value(nullptr)
     { std::swap(type, u.type); std::swap(value, u.value); }
-  ServerFieldUnion(const ServerFieldUnion &);
-  ServerFieldUnion &operator=(const ServerFieldUnion &u)
-    { ServerFieldUnion t(u); std::swap(type, t.type); std::swap(value, t.value); return *this; }
-  ServerFieldUnion &operator=(ServerFieldUnion &&u) FLATBUFFERS_NOEXCEPT
+  ServerTypeUnion(const ServerTypeUnion &);
+  ServerTypeUnion &operator=(const ServerTypeUnion &u)
+    { ServerTypeUnion t(u); std::swap(type, t.type); std::swap(value, t.value); return *this; }
+  ServerTypeUnion &operator=(ServerTypeUnion &&u) FLATBUFFERS_NOEXCEPT
     { std::swap(type, u.type); std::swap(value, u.value); return *this; }
-  ~ServerFieldUnion() { Reset(); }
+  ~ServerTypeUnion() { Reset(); }
 
   void Reset();
 
@@ -131,44 +98,44 @@ struct ServerFieldUnion {
   void Set(T&& val) {
     using RT = typename std::remove_reference<T>::type;
     Reset();
-    type = ServerFieldTraits<typename RT::TableType>::enum_value;
-    if (type != ServerField_NONE) {
+    type = ServerTypeTraits<typename RT::TableType>::enum_value;
+    if (type != ServerType_NONE) {
       value = new RT(std::forward<T>(val));
     }
   }
 #endif  // FLATBUFFERS_CPP98_STL
 
-  static void *UnPack(const void *obj, ServerField type, const flatbuffers::resolver_function_t *resolver);
+  static void *UnPack(const void *obj, ServerType type, const flatbuffers::resolver_function_t *resolver);
   flatbuffers::Offset<void> Pack(flatbuffers::FlatBufferBuilder &_fbb, const flatbuffers::rehasher_function_t *_rehasher = nullptr) const;
 
   abby::ServerAT *AsServerA() {
-    return type == ServerField_ServerA ?
+    return type == ServerType_ServerA ?
       reinterpret_cast<abby::ServerAT *>(value) : nullptr;
   }
   const abby::ServerAT *AsServerA() const {
-    return type == ServerField_ServerA ?
+    return type == ServerType_ServerA ?
       reinterpret_cast<const abby::ServerAT *>(value) : nullptr;
   }
   abby::ServerBT *AsServerB() {
-    return type == ServerField_ServerB ?
+    return type == ServerType_ServerB ?
       reinterpret_cast<abby::ServerBT *>(value) : nullptr;
   }
   const abby::ServerBT *AsServerB() const {
-    return type == ServerField_ServerB ?
+    return type == ServerType_ServerB ?
       reinterpret_cast<const abby::ServerBT *>(value) : nullptr;
   }
   abby::ServerCT *AsServerC() {
-    return type == ServerField_ServerC ?
+    return type == ServerType_ServerC ?
       reinterpret_cast<abby::ServerCT *>(value) : nullptr;
   }
   const abby::ServerCT *AsServerC() const {
-    return type == ServerField_ServerC ?
+    return type == ServerType_ServerC ?
       reinterpret_cast<const abby::ServerCT *>(value) : nullptr;
   }
 };
 
-bool VerifyServerField(flatbuffers::Verifier &verifier, const void *obj, ServerField type);
-bool VerifyServerFieldVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types);
+bool VerifyServerType(flatbuffers::Verifier &verifier, const void *obj, ServerType type);
+bool VerifyServerTypeVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types);
 
 struct ServerAT : public flatbuffers::NativeTable {
   typedef ServerA TableType;
@@ -397,43 +364,37 @@ flatbuffers::Offset<ServerC> CreateServerC(flatbuffers::FlatBufferBuilder &_fbb,
 
 struct ServerDataT : public flatbuffers::NativeTable {
   typedef ServerData TableType;
-  abby::ServerType type = abby::ServerType_ServerA;
-  abby::ServerFieldUnion message{};
+  abby::ServerTypeUnion message{};
 };
 
 struct ServerData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ServerDataT NativeTableType;
   typedef ServerDataBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_TYPE = 4,
-    VT_MESSAGE_TYPE = 6,
-    VT_MESSAGE = 8
+    VT_MESSAGE_TYPE = 4,
+    VT_MESSAGE = 6
   };
-  abby::ServerType type() const {
-    return static_cast<abby::ServerType>(GetField<int8_t>(VT_TYPE, 0));
-  }
-  abby::ServerField message_type() const {
-    return static_cast<abby::ServerField>(GetField<uint8_t>(VT_MESSAGE_TYPE, 0));
+  abby::ServerType message_type() const {
+    return static_cast<abby::ServerType>(GetField<uint8_t>(VT_MESSAGE_TYPE, 0));
   }
   const void *message() const {
     return GetPointer<const void *>(VT_MESSAGE);
   }
   template<typename T> const T *message_as() const;
   const abby::ServerA *message_as_ServerA() const {
-    return message_type() == abby::ServerField_ServerA ? static_cast<const abby::ServerA *>(message()) : nullptr;
+    return message_type() == abby::ServerType_ServerA ? static_cast<const abby::ServerA *>(message()) : nullptr;
   }
   const abby::ServerB *message_as_ServerB() const {
-    return message_type() == abby::ServerField_ServerB ? static_cast<const abby::ServerB *>(message()) : nullptr;
+    return message_type() == abby::ServerType_ServerB ? static_cast<const abby::ServerB *>(message()) : nullptr;
   }
   const abby::ServerC *message_as_ServerC() const {
-    return message_type() == abby::ServerField_ServerC ? static_cast<const abby::ServerC *>(message()) : nullptr;
+    return message_type() == abby::ServerType_ServerC ? static_cast<const abby::ServerC *>(message()) : nullptr;
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<int8_t>(verifier, VT_TYPE) &&
            VerifyField<uint8_t>(verifier, VT_MESSAGE_TYPE) &&
            VerifyOffset(verifier, VT_MESSAGE) &&
-           VerifyServerField(verifier, message(), message_type()) &&
+           VerifyServerType(verifier, message(), message_type()) &&
            verifier.EndTable();
   }
   ServerDataT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
@@ -457,10 +418,7 @@ struct ServerDataBuilder {
   typedef ServerData Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_type(abby::ServerType type) {
-    fbb_.AddElement<int8_t>(ServerData::VT_TYPE, static_cast<int8_t>(type), 0);
-  }
-  void add_message_type(abby::ServerField message_type) {
+  void add_message_type(abby::ServerType message_type) {
     fbb_.AddElement<uint8_t>(ServerData::VT_MESSAGE_TYPE, static_cast<uint8_t>(message_type), 0);
   }
   void add_message(flatbuffers::Offset<void> message) {
@@ -479,13 +437,11 @@ struct ServerDataBuilder {
 
 inline flatbuffers::Offset<ServerData> CreateServerData(
     flatbuffers::FlatBufferBuilder &_fbb,
-    abby::ServerType type = abby::ServerType_ServerA,
-    abby::ServerField message_type = abby::ServerField_NONE,
+    abby::ServerType message_type = abby::ServerType_NONE,
     flatbuffers::Offset<void> message = 0) {
   ServerDataBuilder builder_(_fbb);
   builder_.add_message(message);
   builder_.add_message_type(message_type);
-  builder_.add_type(type);
   return builder_.Finish();
 }
 
@@ -587,9 +543,8 @@ inline ServerDataT *ServerData::UnPack(const flatbuffers::resolver_function_t *_
 inline void ServerData::UnPackTo(ServerDataT *_o, const flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = type(); _o->type = _e; }
   { auto _e = message_type(); _o->message.type = _e; }
-  { auto _e = message(); if (_e) _o->message.value = abby::ServerFieldUnion::UnPack(_e, message_type(), _resolver); }
+  { auto _e = message(); if (_e) _o->message.value = abby::ServerTypeUnion::UnPack(_e, message_type(), _resolver); }
 }
 
 inline flatbuffers::Offset<ServerData> ServerData::Pack(flatbuffers::FlatBufferBuilder &_fbb, const ServerDataT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
@@ -600,30 +555,28 @@ inline flatbuffers::Offset<ServerData> CreateServerData(flatbuffers::FlatBufferB
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const ServerDataT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _type = _o->type;
   auto _message_type = _o->message.type;
   auto _message = _o->message.Pack(_fbb);
   return abby::CreateServerData(
       _fbb,
-      _type,
       _message_type,
       _message);
 }
 
-inline bool VerifyServerField(flatbuffers::Verifier &verifier, const void *obj, ServerField type) {
+inline bool VerifyServerType(flatbuffers::Verifier &verifier, const void *obj, ServerType type) {
   switch (type) {
-    case ServerField_NONE: {
+    case ServerType_NONE: {
       return true;
     }
-    case ServerField_ServerA: {
+    case ServerType_ServerA: {
       auto ptr = reinterpret_cast<const abby::ServerA *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case ServerField_ServerB: {
+    case ServerType_ServerB: {
       auto ptr = reinterpret_cast<const abby::ServerB *>(obj);
       return verifier.VerifyTable(ptr);
     }
-    case ServerField_ServerC: {
+    case ServerType_ServerC: {
       auto ptr = reinterpret_cast<const abby::ServerC *>(obj);
       return verifier.VerifyTable(ptr);
     }
@@ -631,29 +584,29 @@ inline bool VerifyServerField(flatbuffers::Verifier &verifier, const void *obj, 
   }
 }
 
-inline bool VerifyServerFieldVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types) {
+inline bool VerifyServerTypeVector(flatbuffers::Verifier &verifier, const flatbuffers::Vector<flatbuffers::Offset<void>> *values, const flatbuffers::Vector<uint8_t> *types) {
   if (!values || !types) return !values && !types;
   if (values->size() != types->size()) return false;
   for (flatbuffers::uoffset_t i = 0; i < values->size(); ++i) {
-    if (!VerifyServerField(
-        verifier,  values->Get(i), types->GetEnum<ServerField>(i))) {
+    if (!VerifyServerType(
+        verifier,  values->Get(i), types->GetEnum<ServerType>(i))) {
       return false;
     }
   }
   return true;
 }
 
-inline void *ServerFieldUnion::UnPack(const void *obj, ServerField type, const flatbuffers::resolver_function_t *resolver) {
+inline void *ServerTypeUnion::UnPack(const void *obj, ServerType type, const flatbuffers::resolver_function_t *resolver) {
   switch (type) {
-    case ServerField_ServerA: {
+    case ServerType_ServerA: {
       auto ptr = reinterpret_cast<const abby::ServerA *>(obj);
       return ptr->UnPack(resolver);
     }
-    case ServerField_ServerB: {
+    case ServerType_ServerB: {
       auto ptr = reinterpret_cast<const abby::ServerB *>(obj);
       return ptr->UnPack(resolver);
     }
-    case ServerField_ServerC: {
+    case ServerType_ServerC: {
       auto ptr = reinterpret_cast<const abby::ServerC *>(obj);
       return ptr->UnPack(resolver);
     }
@@ -661,17 +614,17 @@ inline void *ServerFieldUnion::UnPack(const void *obj, ServerField type, const f
   }
 }
 
-inline flatbuffers::Offset<void> ServerFieldUnion::Pack(flatbuffers::FlatBufferBuilder &_fbb, const flatbuffers::rehasher_function_t *_rehasher) const {
+inline flatbuffers::Offset<void> ServerTypeUnion::Pack(flatbuffers::FlatBufferBuilder &_fbb, const flatbuffers::rehasher_function_t *_rehasher) const {
   switch (type) {
-    case ServerField_ServerA: {
+    case ServerType_ServerA: {
       auto ptr = reinterpret_cast<const abby::ServerAT *>(value);
       return CreateServerA(_fbb, ptr, _rehasher).Union();
     }
-    case ServerField_ServerB: {
+    case ServerType_ServerB: {
       auto ptr = reinterpret_cast<const abby::ServerBT *>(value);
       return CreateServerB(_fbb, ptr, _rehasher).Union();
     }
-    case ServerField_ServerC: {
+    case ServerType_ServerC: {
       auto ptr = reinterpret_cast<const abby::ServerCT *>(value);
       return CreateServerC(_fbb, ptr, _rehasher).Union();
     }
@@ -679,17 +632,17 @@ inline flatbuffers::Offset<void> ServerFieldUnion::Pack(flatbuffers::FlatBufferB
   }
 }
 
-inline ServerFieldUnion::ServerFieldUnion(const ServerFieldUnion &u) : type(u.type), value(nullptr) {
+inline ServerTypeUnion::ServerTypeUnion(const ServerTypeUnion &u) : type(u.type), value(nullptr) {
   switch (type) {
-    case ServerField_ServerA: {
+    case ServerType_ServerA: {
       value = new abby::ServerAT(*reinterpret_cast<abby::ServerAT *>(u.value));
       break;
     }
-    case ServerField_ServerB: {
+    case ServerType_ServerB: {
       value = new abby::ServerBT(*reinterpret_cast<abby::ServerBT *>(u.value));
       break;
     }
-    case ServerField_ServerC: {
+    case ServerType_ServerC: {
       value = new abby::ServerCT(*reinterpret_cast<abby::ServerCT *>(u.value));
       break;
     }
@@ -698,19 +651,19 @@ inline ServerFieldUnion::ServerFieldUnion(const ServerFieldUnion &u) : type(u.ty
   }
 }
 
-inline void ServerFieldUnion::Reset() {
+inline void ServerTypeUnion::Reset() {
   switch (type) {
-    case ServerField_ServerA: {
+    case ServerType_ServerA: {
       auto ptr = reinterpret_cast<abby::ServerAT *>(value);
       delete ptr;
       break;
     }
-    case ServerField_ServerB: {
+    case ServerType_ServerB: {
       auto ptr = reinterpret_cast<abby::ServerBT *>(value);
       delete ptr;
       break;
     }
-    case ServerField_ServerC: {
+    case ServerType_ServerC: {
       auto ptr = reinterpret_cast<abby::ServerCT *>(value);
       delete ptr;
       break;
@@ -718,7 +671,7 @@ inline void ServerFieldUnion::Reset() {
     default: break;
   }
   value = nullptr;
-  type = ServerField_NONE;
+  type = ServerType_NONE;
 }
 
 inline const abby::ServerData *GetServerData(const void *buf) {

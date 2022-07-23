@@ -84,7 +84,7 @@ public:
             }
             // parsing
             auto data = GetServerData((const uint8_t*)&body[0]);
-            switch (data->type()) // union自带type
+            switch (data->message_type()) // union自带type
             {
                 case ServerType_ServerA:
                 {
@@ -108,7 +108,7 @@ public:
                 {
                     std::cout << "min:" <<   abby::ServerType::ServerType_MIN << std::endl;
                     std::cout << "max:" <<   abby::ServerType::ServerType_MAX << std::endl;
-                    std::cout << "undefined type." << data->type() << std::endl;
+                    std::cout << "undefined type." << data->message_type() << std::endl;
                     break;
                 }
             }

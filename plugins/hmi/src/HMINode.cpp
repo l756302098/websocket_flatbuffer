@@ -2,6 +2,7 @@
 #include "socket_server.hpp"
 #include "message_handler.hpp"
 #include "socket_client.hpp"
+#include "message_helper.hpp"
 #include "../protocol/generated/s2c_generated.h"
 
 using namespace abby;
@@ -33,7 +34,8 @@ int main(int argc,char** argv){
                 uint8_t *data = new uint8_t[bodySize];
                 memcpy(data,buf,bodySize);
 
-                auto desData = GetServerData((const uint8_t*)data);
+                //auto desData = GetServerData((const uint8_t*)data);
+                auto desData = abby::unpackage((const uint8_t*)data,bodySize);
                 std::cout << "type:" << desData->message_type() << std::endl;
                 switch (desData->message_type()) // union自带type
                 {
@@ -91,12 +93,10 @@ int main(int argc,char** argv){
                 uint8_t *data2 = new uint8_t[bodySize2];
                 memcpy(data2,buf2,bodySize2);
 
-                // uint32_t dbodySize = 0;
-                // memcpy(&dbodySize,data2,4);
-                // std::cout << "des size:" << dbodySize << std::endl;
-                size_t prefixed_size = flatbuffers::ReadScalar<flatbuffers::uoffset_t>(data2);
-                std::cout << "prefixed_size:" << prefixed_size << std::endl;
-                auto desData2 = GetServerData((const uint8_t*)(data2+4));
+                // size_t prefixed_size = flatbuffers::ReadScalar<flatbuffers::uoffset_t>(data2);
+                // std::cout << "prefixed_size:" << prefixed_size << std::endl;
+                // auto desData2 = GetServerData((const uint8_t*)(data2+4));
+                auto desData2 = abby::unpackage_fixedsize((const uint8_t*)data2,bodySize2);
                 std::cout << "type:" << desData2->message_type() << std::endl;
                 switch (desData2->message_type()) // union自带type
                 {

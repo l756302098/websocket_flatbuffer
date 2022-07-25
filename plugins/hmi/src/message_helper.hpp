@@ -24,6 +24,11 @@ public:
     }
 };
 
+static std::shared_ptr<ws_message> generate(std::uint32_t bodyLength = 0) {
+    auto msg = std::make_shared<ws_message>(bodyLength);
+    return msg;
+}
+
 static std::shared_ptr<ws_message> package(flatbuffers::FlatBufferBuilder builder)
 {
     uint8_t *buf = builder.GetBufferPointer();
@@ -46,14 +51,28 @@ static std::shared_ptr<ws_message> package_fixedsize(flatbuffers::FlatBufferBuil
     return msg_ptr;
 }
 
-static const abby::ServerData* unpackage(const uint8_t* buf)
+static const abby::ServerData* unpackage(const uint8_t* buf,std::uint32_t size)
 {
+    flatbuffers::Verifier verifer(buf, size);
+    if (!VerifyServerDataBuffer(verifer))
+    {
+        std::cout << "invalid flatbuffers data" << std::endl;
+        return nullptr;
+    }
     const abby::ServerData *server_data = GetServerData(buf);
     return server_data;
 }
 
-static std::shared_ptr<ws_message> generate(std::uint32_t bodyLength = 0) {
-    auto msg = std::make_shared<ws_message>(bodyLength);
-    return msg;
+static const abby::ServerData* unpackage_fixedsize(const uint8_t* buf,std::uint32_t size)
+{
+    flatbuffers::Verifier verifer(buf, size);
+    if(VerifySizePrefixedServerDataBuffer(verifer))
+    {
+        std::cout << "invalid flatbuffers data" << std::endl;
+        return nullptr;
+    }
+    size_t prefixed_size = flatbuffers::ReadScalar<flatbuffers::uoffset_t>(buf);
+    const abby::ServerData *server_data = GetServerData((const uint8_t*)(buf+4));
+    return server_data;
 }
 }

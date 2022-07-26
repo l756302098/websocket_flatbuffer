@@ -110,6 +110,12 @@ public:
                     std::cout << "name: " << quote->name()->c_str() << ", weight: " << quote->weight();
                     break;
                 }
+                case ServerType_ServerImage:
+                {
+                    auto image = reinterpret_cast<const abby::ServerImage *>(data->message());
+                    std::cout << "weight: " << image->weight() << ", height: " << image->height();
+                    break;
+                }
                 default:
                 {
                     std::cout << "min:" <<   abby::ServerType::ServerType_MIN << std::endl;

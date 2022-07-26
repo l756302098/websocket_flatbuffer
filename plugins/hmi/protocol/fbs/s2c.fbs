@@ -15,10 +15,18 @@ table ServerC {
 	weight:int;
 }
 
+table ServerImage {
+	time: double;
+	height: int;
+	weight: int;
+    image: [ubyte];
+}
+
 union ServerType {
     ServerA,
     ServerB,
 	ServerC,
+	ServerImage,
 }
 
 table ServerData {

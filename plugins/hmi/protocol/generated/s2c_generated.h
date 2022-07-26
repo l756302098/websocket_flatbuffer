@@ -20,6 +20,10 @@ struct ServerC;
 struct ServerCBuilder;
 struct ServerCT;
 
+struct ServerImage;
+struct ServerImageBuilder;
+struct ServerImageT;
+
 struct ServerData;
 struct ServerDataBuilder;
 struct ServerDataT;
@@ -29,33 +33,36 @@ enum ServerType : uint8_t {
   ServerType_ServerA = 1,
   ServerType_ServerB = 2,
   ServerType_ServerC = 3,
+  ServerType_ServerImage = 4,
   ServerType_MIN = ServerType_NONE,
-  ServerType_MAX = ServerType_ServerC
+  ServerType_MAX = ServerType_ServerImage
 };
 
-inline const ServerType (&EnumValuesServerType())[4] {
+inline const ServerType (&EnumValuesServerType())[5] {
   static const ServerType values[] = {
     ServerType_NONE,
     ServerType_ServerA,
     ServerType_ServerB,
-    ServerType_ServerC
+    ServerType_ServerC,
+    ServerType_ServerImage
   };
   return values;
 }
 
 inline const char * const *EnumNamesServerType() {
-  static const char * const names[5] = {
+  static const char * const names[6] = {
     "NONE",
     "ServerA",
     "ServerB",
     "ServerC",
+    "ServerImage",
     nullptr
   };
   return names;
 }
 
 inline const char *EnumNameServerType(ServerType e) {
-  if (flatbuffers::IsOutRange(e, ServerType_NONE, ServerType_ServerC)) return "";
+  if (flatbuffers::IsOutRange(e, ServerType_NONE, ServerType_ServerImage)) return "";
   const size_t index = static_cast<size_t>(e);
   return EnumNamesServerType()[index];
 }
@@ -74,6 +81,10 @@ template<> struct ServerTypeTraits<abby::ServerB> {
 
 template<> struct ServerTypeTraits<abby::ServerC> {
   static const ServerType enum_value = ServerType_ServerC;
+};
+
+template<> struct ServerTypeTraits<abby::ServerImage> {
+  static const ServerType enum_value = ServerType_ServerImage;
 };
 
 struct ServerTypeUnion {
@@ -131,6 +142,14 @@ struct ServerTypeUnion {
   const abby::ServerCT *AsServerC() const {
     return type == ServerType_ServerC ?
       reinterpret_cast<const abby::ServerCT *>(value) : nullptr;
+  }
+  abby::ServerImageT *AsServerImage() {
+    return type == ServerType_ServerImage ?
+      reinterpret_cast<abby::ServerImageT *>(value) : nullptr;
+  }
+  const abby::ServerImageT *AsServerImage() const {
+    return type == ServerType_ServerImage ?
+      reinterpret_cast<const abby::ServerImageT *>(value) : nullptr;
   }
 };
 
@@ -362,6 +381,107 @@ inline flatbuffers::Offset<ServerC> CreateServerCDirect(
 
 flatbuffers::Offset<ServerC> CreateServerC(flatbuffers::FlatBufferBuilder &_fbb, const ServerCT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
 
+struct ServerImageT : public flatbuffers::NativeTable {
+  typedef ServerImage TableType;
+  double time = 0.0;
+  int32_t height = 0;
+  int32_t weight = 0;
+  std::vector<uint8_t> image{};
+};
+
+struct ServerImage FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
+  typedef ServerImageT NativeTableType;
+  typedef ServerImageBuilder Builder;
+  enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
+    VT_TIME = 4,
+    VT_HEIGHT = 6,
+    VT_WEIGHT = 8,
+    VT_IMAGE = 10
+  };
+  double time() const {
+    return GetField<double>(VT_TIME, 0.0);
+  }
+  int32_t height() const {
+    return GetField<int32_t>(VT_HEIGHT, 0);
+  }
+  int32_t weight() const {
+    return GetField<int32_t>(VT_WEIGHT, 0);
+  }
+  const flatbuffers::Vector<uint8_t> *image() const {
+    return GetPointer<const flatbuffers::Vector<uint8_t> *>(VT_IMAGE);
+  }
+  bool Verify(flatbuffers::Verifier &verifier) const {
+    return VerifyTableStart(verifier) &&
+           VerifyField<double>(verifier, VT_TIME) &&
+           VerifyField<int32_t>(verifier, VT_HEIGHT) &&
+           VerifyField<int32_t>(verifier, VT_WEIGHT) &&
+           VerifyOffset(verifier, VT_IMAGE) &&
+           verifier.VerifyVector(image()) &&
+           verifier.EndTable();
+  }
+  ServerImageT *UnPack(const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  void UnPackTo(ServerImageT *_o, const flatbuffers::resolver_function_t *_resolver = nullptr) const;
+  static flatbuffers::Offset<ServerImage> Pack(flatbuffers::FlatBufferBuilder &_fbb, const ServerImageT* _o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+};
+
+struct ServerImageBuilder {
+  typedef ServerImage Table;
+  flatbuffers::FlatBufferBuilder &fbb_;
+  flatbuffers::uoffset_t start_;
+  void add_time(double time) {
+    fbb_.AddElement<double>(ServerImage::VT_TIME, time, 0.0);
+  }
+  void add_height(int32_t height) {
+    fbb_.AddElement<int32_t>(ServerImage::VT_HEIGHT, height, 0);
+  }
+  void add_weight(int32_t weight) {
+    fbb_.AddElement<int32_t>(ServerImage::VT_WEIGHT, weight, 0);
+  }
+  void add_image(flatbuffers::Offset<flatbuffers::Vector<uint8_t>> image) {
+    fbb_.AddOffset(ServerImage::VT_IMAGE, image);
+  }
+  explicit ServerImageBuilder(flatbuffers::FlatBufferBuilder &_fbb)
+        : fbb_(_fbb) {
+    start_ = fbb_.StartTable();
+  }
+  flatbuffers::Offset<ServerImage> Finish() {
+    const auto end = fbb_.EndTable(start_);
+    auto o = flatbuffers::Offset<ServerImage>(end);
+    return o;
+  }
+};
+
+inline flatbuffers::Offset<ServerImage> CreateServerImage(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    double time = 0.0,
+    int32_t height = 0,
+    int32_t weight = 0,
+    flatbuffers::Offset<flatbuffers::Vector<uint8_t>> image = 0) {
+  ServerImageBuilder builder_(_fbb);
+  builder_.add_time(time);
+  builder_.add_image(image);
+  builder_.add_weight(weight);
+  builder_.add_height(height);
+  return builder_.Finish();
+}
+
+inline flatbuffers::Offset<ServerImage> CreateServerImageDirect(
+    flatbuffers::FlatBufferBuilder &_fbb,
+    double time = 0.0,
+    int32_t height = 0,
+    int32_t weight = 0,
+    const std::vector<uint8_t> *image = nullptr) {
+  auto image__ = image ? _fbb.CreateVector<uint8_t>(*image) : 0;
+  return abby::CreateServerImage(
+      _fbb,
+      time,
+      height,
+      weight,
+      image__);
+}
+
+flatbuffers::Offset<ServerImage> CreateServerImage(flatbuffers::FlatBufferBuilder &_fbb, const ServerImageT *_o, const flatbuffers::rehasher_function_t *_rehasher = nullptr);
+
 struct ServerDataT : public flatbuffers::NativeTable {
   typedef ServerData TableType;
   abby::ServerTypeUnion message{};
@@ -390,6 +510,9 @@ struct ServerData FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   const abby::ServerC *message_as_ServerC() const {
     return message_type() == abby::ServerType_ServerC ? static_cast<const abby::ServerC *>(message()) : nullptr;
   }
+  const abby::ServerImage *message_as_ServerImage() const {
+    return message_type() == abby::ServerType_ServerImage ? static_cast<const abby::ServerImage *>(message()) : nullptr;
+  }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
            VerifyField<uint8_t>(verifier, VT_MESSAGE_TYPE) &&
@@ -412,6 +535,10 @@ template<> inline const abby::ServerB *ServerData::message_as<abby::ServerB>() c
 
 template<> inline const abby::ServerC *ServerData::message_as<abby::ServerC>() const {
   return message_as_ServerC();
+}
+
+template<> inline const abby::ServerImage *ServerData::message_as<abby::ServerImage>() const {
+  return message_as_ServerImage();
 }
 
 struct ServerDataBuilder {
@@ -534,6 +661,41 @@ inline flatbuffers::Offset<ServerC> CreateServerC(flatbuffers::FlatBufferBuilder
       _weight);
 }
 
+inline ServerImageT *ServerImage::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
+  auto _o = std::unique_ptr<ServerImageT>(new ServerImageT());
+  UnPackTo(_o.get(), _resolver);
+  return _o.release();
+}
+
+inline void ServerImage::UnPackTo(ServerImageT *_o, const flatbuffers::resolver_function_t *_resolver) const {
+  (void)_o;
+  (void)_resolver;
+  { auto _e = time(); _o->time = _e; }
+  { auto _e = height(); _o->height = _e; }
+  { auto _e = weight(); _o->weight = _e; }
+  { auto _e = image(); if (_e) { _o->image.resize(_e->size()); std::copy(_e->begin(), _e->end(), _o->image.begin()); } }
+}
+
+inline flatbuffers::Offset<ServerImage> ServerImage::Pack(flatbuffers::FlatBufferBuilder &_fbb, const ServerImageT* _o, const flatbuffers::rehasher_function_t *_rehasher) {
+  return CreateServerImage(_fbb, _o, _rehasher);
+}
+
+inline flatbuffers::Offset<ServerImage> CreateServerImage(flatbuffers::FlatBufferBuilder &_fbb, const ServerImageT *_o, const flatbuffers::rehasher_function_t *_rehasher) {
+  (void)_rehasher;
+  (void)_o;
+  struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const ServerImageT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
+  auto _time = _o->time;
+  auto _height = _o->height;
+  auto _weight = _o->weight;
+  auto _image = _o->image.size() ? _fbb.CreateVector(_o->image) : 0;
+  return abby::CreateServerImage(
+      _fbb,
+      _time,
+      _height,
+      _weight,
+      _image);
+}
+
 inline ServerDataT *ServerData::UnPack(const flatbuffers::resolver_function_t *_resolver) const {
   auto _o = std::unique_ptr<ServerDataT>(new ServerDataT());
   UnPackTo(_o.get(), _resolver);
@@ -580,6 +742,10 @@ inline bool VerifyServerType(flatbuffers::Verifier &verifier, const void *obj, S
       auto ptr = reinterpret_cast<const abby::ServerC *>(obj);
       return verifier.VerifyTable(ptr);
     }
+    case ServerType_ServerImage: {
+      auto ptr = reinterpret_cast<const abby::ServerImage *>(obj);
+      return verifier.VerifyTable(ptr);
+    }
     default: return true;
   }
 }
@@ -610,6 +776,10 @@ inline void *ServerTypeUnion::UnPack(const void *obj, ServerType type, const fla
       auto ptr = reinterpret_cast<const abby::ServerC *>(obj);
       return ptr->UnPack(resolver);
     }
+    case ServerType_ServerImage: {
+      auto ptr = reinterpret_cast<const abby::ServerImage *>(obj);
+      return ptr->UnPack(resolver);
+    }
     default: return nullptr;
   }
 }
@@ -628,6 +798,10 @@ inline flatbuffers::Offset<void> ServerTypeUnion::Pack(flatbuffers::FlatBufferBu
       auto ptr = reinterpret_cast<const abby::ServerCT *>(value);
       return CreateServerC(_fbb, ptr, _rehasher).Union();
     }
+    case ServerType_ServerImage: {
+      auto ptr = reinterpret_cast<const abby::ServerImageT *>(value);
+      return CreateServerImage(_fbb, ptr, _rehasher).Union();
+    }
     default: return 0;
   }
 }
@@ -644,6 +818,10 @@ inline ServerTypeUnion::ServerTypeUnion(const ServerTypeUnion &u) : type(u.type)
     }
     case ServerType_ServerC: {
       value = new abby::ServerCT(*reinterpret_cast<abby::ServerCT *>(u.value));
+      break;
+    }
+    case ServerType_ServerImage: {
+      value = new abby::ServerImageT(*reinterpret_cast<abby::ServerImageT *>(u.value));
       break;
     }
     default:
@@ -665,6 +843,11 @@ inline void ServerTypeUnion::Reset() {
     }
     case ServerType_ServerC: {
       auto ptr = reinterpret_cast<abby::ServerCT *>(value);
+      delete ptr;
+      break;
+    }
+    case ServerType_ServerImage: {
+      auto ptr = reinterpret_cast<abby::ServerImageT *>(value);
       delete ptr;
       break;
     }

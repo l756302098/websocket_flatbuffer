@@ -16,4 +16,4 @@ include_directories(
 
 add_executable(hmi_plugin src/HMINode.cpp)
 
-target_link_libraries(hmi_plugin pthread ${Boost_LIBRARIES} ${OpenCV_LIBS} boost_system)
+target_link_libraries(hmi_plugin pthread ${Boost_LIBRARIES} ${OpenCV_LIBS} boost_system rt)

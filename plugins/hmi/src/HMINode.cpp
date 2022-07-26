@@ -95,11 +95,12 @@ int main(int argc,char** argv){
                                 << ", h:" << image.rows << std::endl;
                     return;
                 }
-                auto imageEntry = CreateServerImage(builder,0,image.cols,image.rows,builder.CreateVector(imagebuf));
-                auto serverImageData = CreateServerData(builder,ServerType_ServerImage,imageEntry.Union());
-                builder.Finish(serverData);
+                flatbuffers::FlatBufferBuilder builder2;
+                auto imageEntry = CreateServerImage(builder2,image.rows, image.cols,builder2.CreateVector(imagebuf));
+                auto serverImageData = CreateServerData(builder2,ServerType_ServerImage,imageEntry.Union());
+                builder2.Finish(serverImageData);
 
-                auto imagePackage = abby::package(builder);
+                auto imagePackage = abby::package(builder2);
                 server_instance.send(imagePackage->get_body(),imagePackage->get_size());
 
                 sleep(0.01);

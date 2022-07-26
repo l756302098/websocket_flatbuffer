@@ -16,7 +16,6 @@ table ServerC {
 }
 
 table ServerImage {
-	time: double;
 	height: int;
 	weight: int;
     image: [ubyte];

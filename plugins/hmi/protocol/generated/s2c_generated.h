@@ -383,7 +383,6 @@ flatbuffers::Offset<ServerC> CreateServerC(flatbuffers::FlatBufferBuilder &_fbb,
 
 struct ServerImageT : public flatbuffers::NativeTable {
   typedef ServerImage TableType;
-  double time = 0.0;
   int32_t height = 0;
   int32_t weight = 0;
   std::vector<uint8_t> image{};
@@ -393,14 +392,10 @@ struct ServerImage FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   typedef ServerImageT NativeTableType;
   typedef ServerImageBuilder Builder;
   enum FlatBuffersVTableOffset FLATBUFFERS_VTABLE_UNDERLYING_TYPE {
-    VT_TIME = 4,
-    VT_HEIGHT = 6,
-    VT_WEIGHT = 8,
-    VT_IMAGE = 10
+    VT_HEIGHT = 4,
+    VT_WEIGHT = 6,
+    VT_IMAGE = 8
   };
-  double time() const {
-    return GetField<double>(VT_TIME, 0.0);
-  }
   int32_t height() const {
     return GetField<int32_t>(VT_HEIGHT, 0);
   }
@@ -412,7 +407,6 @@ struct ServerImage FLATBUFFERS_FINAL_CLASS : private flatbuffers::Table {
   }
   bool Verify(flatbuffers::Verifier &verifier) const {
     return VerifyTableStart(verifier) &&
-           VerifyField<double>(verifier, VT_TIME) &&
            VerifyField<int32_t>(verifier, VT_HEIGHT) &&
            VerifyField<int32_t>(verifier, VT_WEIGHT) &&
            VerifyOffset(verifier, VT_IMAGE) &&
@@ -428,9 +422,6 @@ struct ServerImageBuilder {
   typedef ServerImage Table;
   flatbuffers::FlatBufferBuilder &fbb_;
   flatbuffers::uoffset_t start_;
-  void add_time(double time) {
-    fbb_.AddElement<double>(ServerImage::VT_TIME, time, 0.0);
-  }
   void add_height(int32_t height) {
     fbb_.AddElement<int32_t>(ServerImage::VT_HEIGHT, height, 0);
   }
@@ -453,12 +444,10 @@ struct ServerImageBuilder {
 
 inline flatbuffers::Offset<ServerImage> CreateServerImage(
     flatbuffers::FlatBufferBuilder &_fbb,
-    double time = 0.0,
     int32_t height = 0,
     int32_t weight = 0,
     flatbuffers::Offset<flatbuffers::Vector<uint8_t>> image = 0) {
   ServerImageBuilder builder_(_fbb);
-  builder_.add_time(time);
   builder_.add_image(image);
   builder_.add_weight(weight);
   builder_.add_height(height);
@@ -467,14 +456,12 @@ inline flatbuffers::Offset<ServerImage> CreateServerImage(
 
 inline flatbuffers::Offset<ServerImage> CreateServerImageDirect(
     flatbuffers::FlatBufferBuilder &_fbb,
-    double time = 0.0,
     int32_t height = 0,
     int32_t weight = 0,
     const std::vector<uint8_t> *image = nullptr) {
   auto image__ = image ? _fbb.CreateVector<uint8_t>(*image) : 0;
   return abby::CreateServerImage(
       _fbb,
-      time,
       height,
       weight,
       image__);
@@ -670,7 +657,6 @@ inline ServerImageT *ServerImage::UnPack(const flatbuffers::resolver_function_t 
 inline void ServerImage::UnPackTo(ServerImageT *_o, const flatbuffers::resolver_function_t *_resolver) const {
   (void)_o;
   (void)_resolver;
-  { auto _e = time(); _o->time = _e; }
   { auto _e = height(); _o->height = _e; }
   { auto _e = weight(); _o->weight = _e; }
   { auto _e = image(); if (_e) { _o->image.resize(_e->size()); std::copy(_e->begin(), _e->end(), _o->image.begin()); } }
@@ -684,13 +670,11 @@ inline flatbuffers::Offset<ServerImage> CreateServerImage(flatbuffers::FlatBuffe
   (void)_rehasher;
   (void)_o;
   struct _VectorArgs { flatbuffers::FlatBufferBuilder *__fbb; const ServerImageT* __o; const flatbuffers::rehasher_function_t *__rehasher; } _va = { &_fbb, _o, _rehasher}; (void)_va;
-  auto _time = _o->time;
   auto _height = _o->height;
   auto _weight = _o->weight;
   auto _image = _o->image.size() ? _fbb.CreateVector(_o->image) : 0;
   return abby::CreateServerImage(
       _fbb,
-      _time,
       _height,
       _weight,
       _image);

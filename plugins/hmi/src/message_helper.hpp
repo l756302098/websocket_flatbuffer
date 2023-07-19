@@ -50,7 +50,7 @@ static std::shared_ptr<ws_message> package(const flatbuffers::FlatBufferBuilder&
     memcpy(data+4,buf,size);
     std::shared_ptr<ws_message> msg_ptr = generate(size+4);
     memcpy(msg_ptr->get_body(),data,size+4);
-    delete data;
+    delete[] data;
     return msg_ptr;
 }
 

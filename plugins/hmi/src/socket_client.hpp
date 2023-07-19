@@ -66,23 +66,6 @@ public:
         std::cout << "deal_msg..." << std::endl;
         try
         {
-            // std::uint32_t bodySize = 0;
-            // memcpy(&bodySize,payload.c_str(),4);
-            // std::vector<char> body(payload.begin()+4, payload.end());
-            // std::cout << "payload size:" << payload.size() << " size:" << bodySize << std::endl;
-            // for (size_t i = 0; i < body.size(); i++)
-            // {
-            //     printf("%02X ",body[i]);
-            // }
-            // printf("\n");
-            
-            // // verifier data
-            // flatbuffers::Verifier verifier((const uint8_t *)(payload.c_str()+4), bodySize);
-            // if (!VerifyServerDataBuffer(verifier))
-            // {
-            //     std::cout << "error data" << std::endl;
-            //     return;
-            // }
             // parsing
             //auto data = GetServerData((const uint8_t*)&body[0]);
             auto data = abby::unpackage((const uint8_t*)payload.c_str(),payload.size());
@@ -113,7 +96,7 @@ public:
                 case ServerType_ServerImage:
                 {
                     auto image = reinterpret_cast<const abby::ServerImage *>(data->message());
-                    std::cout << "weight: " << image->weight() << ", height: " << image->height();
+                    std::cout << "weight: " << image->weight() << ", height: " << image->height() << std::endl;
                     break;
                 }
                 default:
@@ -145,14 +128,6 @@ public:
     }
 
     void on_message(WsConnection hdl, WsClient::message_ptr msg) {
-        // queue message up for sending by processing thread
-        // std::cout << "on_message:" << msg.get()->get_payload().size() << std::endl;
-        // for (size_t i = 0; i < msg.get()->get_payload().size(); i++)
-        // {
-        //     printf("%02X ",msg.get()->get_payload()[i]);
-        // }
-        // printf("\n");
-
         std::unique_lock<std::mutex> lock(action_lock);
         messages.push_back(msg->get_payload());
         action_condition.notify_one();

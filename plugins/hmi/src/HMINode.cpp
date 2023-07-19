@@ -29,61 +29,9 @@ int main(int argc,char** argv){
                 auto entry = CreateServerA(builder,2.30,builder.CreateString("a"));
                 auto serverData = CreateServerData(builder,ServerType_ServerA,entry.Union());
                 builder.Finish(serverData);
-                // uint8_t *buf = builder.GetBufferPointer();
-                // std::uint32_t bodySize = builder.GetSize();
-                // std::cout << "buf size:" << bodySize << std::endl;
+                
                 auto package = abby::package(builder);
                 server_instance.send(package->get_body(),package->get_size());
-                
-               
-                /*
-                uint8_t *data = new uint8_t[bodySize];
-                memcpy(data,buf,bodySize);
-                //auto desData = GetServerData((const uint8_t*)data);
-                auto desData = abby::unpackage((const uint8_t*)data,bodySize);
-                std::cout << "type:" << desData->message_type() << std::endl;
-                switch (desData->message_type()) // union自带type
-                {
-                    case ServerType_ServerA:
-                    {
-                        auto quote = reinterpret_cast<const abby::ServerA *>(desData->message());
-                        std::cout << "name: " << quote->name()->c_str() << ", price: " << quote->price() << std::endl;
-                        break;
-                    }
-                    case ServerType_ServerB:
-                    {
-                        auto quote = reinterpret_cast<const abby::ServerB *>(desData->message());
-                        std::cout << "name: " << quote->name()->c_str() << ", age: " << quote->age();
-                        break;
-                    }
-                    case ServerType_ServerC:
-                    {
-                        auto quote = reinterpret_cast<const abby::ServerC *>(desData->message());
-                        std::cout << "name: " << quote->name()->c_str() << ", weight: " << quote->weight();
-                        break;
-                    }
-                    default:
-                    {
-                        std::cout << "min:" <<   abby::ServerType::ServerType_MIN << std::endl;
-                        std::cout << "max:" <<   abby::ServerType::ServerType_MAX << std::endl;
-                        std::cout << "undefined type." << desData->message_type() << std::endl;
-                        break;
-                    }
-                }
-                */
-                
-                // uint8_t *data = new uint8_t[bodySize+4];
-                // memcpy(data,&bodySize,4);
-                // memcpy(data+4,buf,bodySize);
-                // // for (size_t i = 0; i < bodySize+4; i++)
-                // // {
-                // //     printf("%02X ",data[i]);
-                // // }
-                // // printf("\n");
-                // server_instance.send(data,bodySize+4);
-
-                // delete data;
-                
                 
                 sleep(0.01);
 
@@ -109,8 +57,6 @@ int main(int argc,char** argv){
 
         socket_client client;
         client.start();
-
-        
 
         server_instance.stop();
 

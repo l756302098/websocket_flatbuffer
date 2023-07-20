@@ -23,8 +23,8 @@ public:
     {
         try
         {
-            std::cout << "header:" << msg.get()->get_header();
-            std::cout << "payload:" << msg.get()->get_payload();
+            //std::cout << "header:" << msg.get()->get_header();
+            //std::cout << "payload:" << msg.get()->get_payload();
             std::string payload = msg.get()->get_payload();
             std::uint32_t bodySize = 0;
             memcpy(&bodySize,payload.c_str(),4);

@@ -42,6 +42,9 @@ class socket_server
 public:
     socket_server():running(true) {
         // Initialize Asio Transport
+        m_server.set_access_channels(websocketpp::log::alevel::none);
+        // m_server.clear_access_channels(websocketpp::log::alevel::all);
+        // m_server.clear_error_channels(websocketpp::log::alevel::all);
         m_server.init_asio();
 
         // Register handler callbacks

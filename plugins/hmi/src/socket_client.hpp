@@ -16,9 +16,9 @@ class socket_client
 public:
     socket_client():running(true) {
         // Initialize Asio Transport
-        client.set_access_channels(websocketpp::log::alevel::all);
-        client.clear_access_channels(websocketpp::log::alevel::all);
-        client.clear_error_channels(websocketpp::log::alevel::all);
+        client.set_access_channels(websocketpp::log::alevel::none);
+        // client.clear_access_channels(websocketpp::log::alevel::all);
+        // client.clear_error_channels(websocketpp::log::alevel::all);
         client.init_asio();
         
         client.set_open_handler(websocketpp::lib::bind(&socket_client::on_open, this, websocketpp::lib::placeholders::_1));
@@ -78,19 +78,19 @@ public:
                 case ServerType_ServerA:
                 {
                     auto quote = reinterpret_cast<const abby::ServerA *>(data->message());
-                    std::cout << "name: " << quote->name()->c_str() << ", price: " << quote->price();
+                    std::cout << "name: " << quote->name()->c_str() << ", price: " << quote->price() << std::endl;
                     break;
                 }
                 case ServerType_ServerB:
                 {
                     auto quote = reinterpret_cast<const abby::ServerB *>(data->message());
-                    std::cout << "name: " << quote->name()->c_str() << ", age: " << quote->age();
+                    std::cout << "name: " << quote->name()->c_str() << ", age: " << quote->age() << std::endl;
                     break;
                 }
                 case ServerType_ServerC:
                 {
                     auto quote = reinterpret_cast<const abby::ServerC *>(data->message());
-                    std::cout << "name: " << quote->name()->c_str() << ", weight: " << quote->weight();
+                    std::cout << "name: " << quote->name()->c_str() << ", weight: " << quote->weight() << std::endl;
                     break;
                 }
                 case ServerType_ServerImage:

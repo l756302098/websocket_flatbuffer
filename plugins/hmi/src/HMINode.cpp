@@ -49,9 +49,10 @@ int main(int argc,char** argv){
                 builder2.Finish(serverImageData);
 
                 auto imagePackage = abby::package(builder2);
+                std::cout << "origin size:" << imagebuf.size() << " decode size:" << imagePackage->get_size() << std::endl;
                 server_instance.send(imagePackage->get_body(),imagePackage->get_size());
 
-                sleep(0.01);
+                sleep(0.1);
             }
         }).detach();
 

@@ -26,10 +26,8 @@ public:
             //std::cout << "header:" << msg.get()->get_header();
             //std::cout << "payload:" << msg.get()->get_payload();
             std::string payload = msg.get()->get_payload();
-            std::uint32_t bodySize = 0;
-            memcpy(&bodySize,payload.c_str(),4);
-            std::vector<char> body(payload.begin()+4, payload.end());
-            std::cout << "payload size:" << payload.size() << " size:" << bodySize << " body:" << body.size() << std::endl;
+            std::vector<char> data(payload.begin(), payload.end());
+            //std::cout << "payload size:" << payload.size() << " size:" << bodySize << " body:" << body.size() << std::endl;
             // verifier data
             // flatbuffers::Verifier verifier((const uint8_t *)(&body[0]), bodySize);
             // if (!VerifyCDataTypeEntryBuffer(verifier))

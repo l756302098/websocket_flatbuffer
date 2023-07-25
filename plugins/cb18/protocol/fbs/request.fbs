@@ -1,0 +1,346 @@
+include "public.fbs";
+
+namespace swr;
+
+/////////////////////////////////////////////////////////////////////////
+// 具体数据类型
+/////////////////////////////////////////////////////////////////////////
+
+//-------------------------------请求数据结构-----------------------------
+// 开机-请求自检
+table RequestSelfTest {
+    setting : int;                                    //  任何数有效
+}
+
+// 发送HMI版本
+table RequestHMI {
+    model : string;                                     // 型号
+    serial_number : string;                    // 序列号
+    f_w_version : string;                         // 固件版本
+    h_w_version : string;                        // 硬件版本
+}
+
+// 请求清扫模式 (节能、强力)
+table RequestCleanMode {
+    mode : CleanMode;
+}
+
+// 请求手工模式 (启动、关闭)
+table RequestManual {
+    state : ManualState;
+}
+
+// 请求图像视频 (无效,仅调试用)
+table RequestVideo {
+    state : bool;
+}
+// 请求扫描二维码 (绑定RqtVideo)
+table RequestScanQR {
+    state : bool;
+    strict_scan : bool;     // 严格扫码机制 (“示教开始扫码”,“示教关闭扫码”,“回放开始扫码(第一次)”)
+}
+
+// 示教清扫
+table RequestTeachClean {
+    state : CleanState;                          // 清扫状态
+    param : TeachCleanParam;        // 示教清扫参数
+}
+
+// 自动清扫 (轨迹、边界)
+table RequestAutoClean {
+    state : CleanState;                                       // 清扫状态
+    param : AutoCleanParam;                       // 自动清扫参数
+}
+
+// 关于本机
+table RequestAboutThisMachine {
+    setting : int;                                      // 任何数有效
+}
+
+// 运行记录
+table RequestOperationRecord {
+    setting : int;                                      // 任何数有效
+}
+
+// 设备状态
+table RequestEquipmentStatus {
+    refresh : bool;                                      // 刷新
+    type : EquipmentUnitType;           // 单元类型
+}
+
+// 获取站点路径列表
+table RequestSiteRoutes {
+    site_code : string;                                 // 站点码
+}
+
+// 删除路径
+table RequestDelRoute {
+    route : RouteIdent;                             // 路径标识
+}
+
+//  转换槽
+table RequestTransSlot {
+    route : RouteIdent;                 // 旧路径标识
+    new_slot : ubyte;                     // 新路径槽 (A-F)
+}
+
+// 下载路径
+table RequestDownloadRoute {
+    route : RouteIdent;                             // 路径标识
+}
+
+// 验证密码
+table RequestVerifyPassword {
+    pwd : string;                                           // 密码
+}
+
+// 机器参数
+table RequestMachineParams {
+    oper : OperType;                                        // 操作类型 (读取、设置)
+    setting : MachineParamRqst;                // 请求数据
+}
+
+// 设备测试启动
+table RequestEquipmentTesting {
+    state : bool;               // true-启动 false-关闭
+}
+
+// 设备测试项
+table RequestEquipmentTestingItem {
+    type : TestingItemType;         // 测试项类型
+    data : TestingItemData;         // 测试项数据
+}
+
+// 故障设置
+table RequestFaultSetting {
+    oper : OperType;                                        // 操作类型 (读取、设置)
+    data : FaultSettingRqst;                          // 请求数据
+}
+
+// 工作模式
+table RequestWorkingMode {
+    oper : OperType;                           // 操作类型 (读取、设置)
+    param : ParamData;                        // 参数设置
+}
+
+// 工作时长
+table RequestWorkingHours {
+    oper : OperType;                            // 操作类型 (读取、设置)
+    param : ParamData;                        // 参数设置
+}
+
+// 修改密码
+table RequestChangePassword {
+    old_pwd : string;                               // 旧密码 UI不传递
+    new_pwd : string;                             // 新密码
+}
+
+// 站点码
+table RequestSiteCode {
+    any : int;                  // 任意值有效
+}
+
+// 请求节能
+table RequestSavingPower {
+    any : int;                  // 任意值有效
+}
+
+// 请求休眠
+table RequestStandby {
+    any : int;                  // 任意值有效
+}
+
+// 请求退出休眠
+table RequestExitStandby {
+    any : int;                  // 任意值有效
+}
+
+// 更新异常配置
+table RequestUpdateExceptionConfig {
+    any : int;                  // 任意值有效
+}
+
+// 请求一键开关
+table RequestOneButtonSwitch {
+    state : bool;         // true-开 false-关
+}
+
+// 请求下电
+table RequestPowerDown {
+    power_down : bool;      // true-下电 false-取消下电
+}
+
+// 运动控制
+table RequestMotionControl {
+    linear : float;     // 线速度 '+'-前进 '-'-后退
+    angular : float;        // 角速度 '+'-左转 '-'-右转
+}
+
+// 设置音量
+table RequestSetVolume {
+    volume : int;           // 音量 0-100
+}
+
+// 获取音量
+table RequestGetVolume {
+    any : int;              // 任何数有效
+}
+
+// 使能WiFi
+table RequestEnableWifi {
+    enable : bool;          // true-打开 false-关闭
+}
+
+// 请求故障码
+table RequestFaultCode {
+    fault : FaultCode;
+}
+
+// 设置自动边界路径清扫方式-弓/回形
+table RequestAutoBorderRouteCleanWay {
+    clean_way : AutoBorderRouteCleanWay;
+}
+
+// UI控制机器回家
+table RequestGoHome {
+    any : int;              // 任何数有效
+}
+
+// 恢复清扫
+table RequestResumeClean {
+    any : int;              // 任何数有效
+}
+
+// 设置亮度
+table RequestSetBright {
+    bright : uint32;              // 亮度 0-100
+}
+// 获取亮度
+table RequestGetBright {
+    any : uint32;              // 任何数有效
+}
+
+// 获取VCU寄存器数据
+table RequestGetVcuData {
+    reg_id : [uint16];     // VCU寄存器地址列表
+}
+
+// SLAM最终优化(在Teach.Close之前)
+table RequestSlamOptimize {
+    any : int;              // 任何数有效
+}
+
+// 消耗品检测
+table RequestTestConsumables {
+    any : int;              // 任何数有效
+}
+
+// 关闭设备
+table RequestCloseEquitment {
+    any : int;              // 任何数有效
+}
+
+// 请求锁机状态
+table RequestLockState {
+    any : int;              // 任何数有效
+}
+
+//登录
+table RequestLogin {
+    type : LoginType;              // 登录类型
+    pwd : string;                  // 密码
+}
+
+table RequestUpdatePwd{
+    user : LoginUser;                // 用户类型
+}
+
+table RequestUserList{
+    any : int;              // 任何数有效
+}
+
+//-----------------------------------------------------------------
+
+
+/////////////////////////////////////////////////////////////////////////
+// Request 数据域
+/////////////////////////////////////////////////////////////////////////
+union RequestDataField {
+    // 开机
+    RequestSelfTest,                             // 开机-请求自检
+    RequestHMI,                                      // 发送HMI版本
+
+    RequestCleanMode,                    // 清扫模式 (节能、强力)
+    RequestManual,                            // 手工模式 (启动、关闭)
+
+    // 扫码
+    RequestVideo,                                  // 请求图像视频 (无效,仅调试用)
+    RequestScanQR,                             // 请求扫描二维码 (绑定RqtVideo)
+
+    // 智能模式
+    RequestTeachClean,                 // 示教清扫
+    RequestAutoClean,                    // 自动清扫
+
+    // 功能
+    RequestAboutThisMachine,        // 关于本机
+    RequestOperationRecord,           // 运行记录
+    RequestEquipmentStatus,          // 设备状态
+
+    // 地图管理
+    RequestSiteRoutes,                        // 获取站点路径列表
+    RequestDelRoute,                           // 删除路径
+    RequestTransSlot,                          //  转换槽
+    RequestDownloadRoute,           // 下载路径
+
+    // 管理员模式
+    RequestVerifyPassword,                // 验证密码
+    RequestMachineParams,              // 机器参数
+    RequestEquipmentTesting,          // 设备测试
+    RequestEquipmentTestingItem,  // 设备测试设置
+    RequestFaultSetting,                       // 故障设置
+
+    // 系统设置
+    RequestWorkingMode,                    // 工作模式
+    RequestWorkingHours,                   // 工作时长
+    RequestChangePassword,             // 修改密码
+
+    RequestSiteCode,            // 站点码
+    
+    RequestSavingPower,
+    RequestStandby,
+
+    RequestOneButtonSwitch,  // 一键开关
+    RequestPowerDown,           // 请求下电
+    RequestMotionControl,           // 运动控制
+    RequestSetVolume,                   // 设置音量
+    RequestGetVolume,                  // 获取音量
+    RequestEnableWifi,                  // 使能WiFi
+    RequestFaultCode,                   // 请求故障码
+    RequestAutoBorderRouteCleanWay,        // 设置自动边界路径清扫模式-弓/回形
+    RequestGoHome,                      // UI控制机器回家
+    RequestResumeClean,             // 恢复清扫
+    RequestSetBright,                     // 设置亮度
+    RequestGetBright,                    // 获取亮度
+    RequestGetVcuData,                // 获取VCU寄存器数据
+    RequestSlamOptimize,            // SLAM最终优化(在Teach.Close之前)
+    RequestTestConsumables,     // 消耗品检测
+    RequestCloseEquitment,        // 关闭设备
+    RequestExitStandby,           //退出待机
+    RequestUpdateExceptionConfig,  // 更新异常配置
+    RequestLockState,              // 请求锁机状态
+    RequestLogin,                   // 请求登录
+    RequestUpdatePwd,               // 修改密码
+    RequestUserList,                // 用户列表
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+// Request 总结点
+/////////////////////////////////////////////////////////////////////////
+
+table Request {
+    type : RequestType;
+    message: RequestDataField;
+}
+
+root_type Request;

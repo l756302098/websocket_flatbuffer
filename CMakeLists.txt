@@ -15,3 +15,5 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib/${PLATFORM})
 INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/websocketpp)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/plugins/hmi)
+
+add_subdirectory(${PROJECT_SOURCE_DIR}/plugins/cb18)

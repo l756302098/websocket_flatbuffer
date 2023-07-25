@@ -1,0 +1,687 @@
+namespace swr;
+
+
+//-------------------------------公共数据结构-----------------------------
+
+// 错误码
+table ErrorCode {
+    state : bool;                    // 状态 (true:触发 false:解除)
+    type : int;                      // 错误类型 0 - ICE ; 1 - INDEMIND
+    module : int;                    // 错误模块，type为1时有效
+    error : int64;                   // 错误码 (0：成功 other：失败)
+    time : int64;                    // 时间戳
+}
+
+// 故障状态
+enum FaultState : byte {
+    On = 0, // 触发
+    Off = 1, // 解除
+}
+// 故障码
+struct FaultCode {
+    code : uint32;           // 故障码
+    state : FaultState;
+}
+
+// 锁机故障码
+table LockFaultCode {
+    code : uint32;           // 故障码
+    state : FaultState;
+    body_num : string;      // 机身号
+}
+
+// 清扫模式 （节能、强力）
+enum CleanMode : byte {
+    Economize = 0,             // 节能
+    Strong = 1,                      // 强力
+}
+
+// 工作类型
+enum WorkClass : byte {
+    Default = 0,            // 无效值
+    Charging = 1,           // 充电
+    Manual = 2,             // 手工
+    Teaching = 4,           // 教学
+    Autonomous = 5,             // 自动
+}
+
+// 手动状态
+enum ManualState : byte {
+    Start = 0,          // 开始
+    Pause = 1,          // 暂停
+    Continue = 2,          // 继续
+    Stop = 3,          // 停止
+}
+
+// 智能模式
+enum IntelligenceMode : byte  {
+    Teach = 0,                   // 示教
+    Auto = 1,                      // 自动
+}
+
+// 开关操作
+table Switch {
+    on : bool;
+}
+
+// 规划模式
+enum PlanMode : byte {
+    Path = 0,            // 轨迹
+    Edge = 1,           // 边界
+}
+
+// 清扫状态
+enum CleanState : byte {
+    Start  = 0,                       // 启动
+    Close  = 1,                      // 关闭
+    Pause  = 2,                     // 暂停
+    Wake  = 3,                      // 唤醒
+    Cancel  = 4,                   // 取消
+}
+
+// 自动清扫中间状态
+enum AutoCleanState : byte {
+    StartSuccess = 0,       // 自动清扫开始成功
+    StartFail = 1,       // 自动清扫开始成功
+    FinishSuccess = 2,       // 自动清扫结束成功
+    FinishFail = 3,       // 自动清扫结束失败
+}
+
+// 清洁方式（默认、节能、强力）
+enum CleanWay : byte {
+    Default  = 0,                          // 默认
+    Economize,                          // 节能
+    Strong,                                   // 强力
+    Mopping,                              // 拖把
+}
+
+// marker 状态
+enum MarkerState : byte {
+    Success = 0,
+    ImageIsEmpty,       // 图像为空
+    ImageNotGray,       // 图像不是灰色的
+    TargetNoIdDetected,     // 未检测到目标Id
+    TargetMoreThanOneIdDetected,        // 目标检测到多个Id
+    TargetMatchNotUnique,       // 目标匹配不唯一
+    TargetOnlyIdDetected,       // 仅检测到Id
+    TargetIsNotPlane,       // 目标不是平的
+    TargetNotWorkspaceTooFar,       // 目标太远
+    TargetNotWorkspaceTooClose,     // 目标太近
+    TargetNotWorkspaceOutOfDegreeRange,     // 目标超出度数范围
+    TargetNotWorkspaceOutOfDegreeRangeLeft,  // 目标左边超出度数范围
+    TargetNotWorkspaceOutOfDegreeRangeRight,  // 目标右边超出度数范围
+    TargetWorkspaceTilt,        // 目标工作区倾斜超过度数
+    TargetWorkspaceTiltLeft,        // 目标工作区左边倾斜超过度数
+    TargetWorkspaceTiltRight,        // 目标工作区右边倾斜超过度数
+    TargetWorkspacePitch,   //   目标工作区俯仰超过度数
+    TargetWorkspacePitchUp,   //   目标工作区向上俯仰超过度数
+    TargetWorkspacePitchDown,   //   目标工作区向下俯仰超过度数
+    TargetWorkspaceSideWay,        // 目标工作区歪倒超过度数
+    TargetWorkspaceSideWayLeft,        // 目标工作区左边歪倒超过度数
+    TargetWorkspaceSideWayRight,        // 目标工作区右边歪倒超过度数
+    TargetWorkspaceFlip,  // 目标倒置
+    TargetIsDifferentFromCheckCode, // 目标与校验码不一致
+    Unknown,        // 未知状态
+}
+
+// 路线标识
+table RouteIdent {
+    site_code : string;                                 // 站点码
+    hlc_code : string;                                  // 定位码
+    slot_code : ubyte;                                // 路径槽 (A-F)
+    route_id : string;                                  // 路径ID
+}
+
+// 示教清扫参数
+table TeachCleanParam {
+    mode : PlanMode;                               // 规划模式
+    site_code : string;                                // 站点码
+    hlc_code : string;                                 // 定位码
+    slot_code : ubyte;                               // 路径槽 (A-F)
+}
+
+// 自动清扫参数
+table AutoCleanParam {
+    clean_way : CleanWay;                          // 清洁方式
+    clean_num : int;                                         // 清洁次数
+    route_list : [RouteIdent];                        // 路线列表
+    run_code: string;                               // 运行图uuid/workrunId
+    run_path: string;                               // 运行图路径
+}
+
+// 弓/回形清扫方式
+enum AutoBorderWay : byte {
+    Bow = 0,              // 弓形
+    Circle = 1,            // 回形
+}
+
+// 设置自动边界路径清扫方式-弓/回形
+table AutoBorderRouteCleanWay {
+    way : AutoBorderWay;                // 自动边界方式
+    route : RouteIdent;                              // 路径
+}
+
+// 设备单元类型
+enum EquipmentUnitType : byte {
+    Core = 0,       // 核心单元
+    Motor,       // 马达单元
+    Sensor,       // 传感器单元
+    Other,       // 其他单元
+}
+
+// 核心单元
+table CoreUnit {
+    battery_voltage : float;                 // 电池电压
+    cell_temperature : float;                    // 电芯温度
+    bms_temperature : float;                 // BMS温度
+    mcu_temperature : float;                 // MCU温度
+    ncu_cpu_temperature : float;                 // NCU CPU温度
+    ncu_cpu_frequency : float;                   // NCU CPU频率
+    ncu_memory_remaining1 : float;                    // NCU内存剩余1
+    ncu_memory_remaining2 : float;                    // NCU内存剩余2
+    remaining_capacity_of_ncu1 : float;                   // NCU剩余容量1
+    remaining_capacity_of_ncu2 : float;                   // NCU剩余容量2
+    ncu_cooling_fan_speed : int;                   // NCU散热风扇转速
+    wheel_mileage_count : int;                 // 车轮里程计数
+}
+
+// 马达单元
+table MotorUnit {
+    left_travel_motor_current : float;                  // 左行走电机电流
+    right_travel_motor_current : float;                 // 右行走电机电流
+    left_brush_motor_current : float;                   // 左刷电机电流
+    mos_tube_temperature_of_left_brush_motor : float;                   // 左刷电机MOS管温度
+    right_brush_motor_current : float;                  // 右刷电机电流
+    right_brush_motor_mos_tube_temperature : float;                 // 右刷电机MOS管温度
+    main_brush_motor_current : float;                   // 主刷电机电流
+    brush_wire_pusher_current : float;                  // 刷盘线推器电流
+    wiper_wire_pusher_current : float;                  // 水刮线推器电流
+    suction_pump_current : float;                   // 吸力泵电流
+    suction_pump_temperature : float;                   // 吸力泵温度
+    clean_water_pump : bool;                   // 清水泵
+}
+
+// 传感器单元
+table SensorUnit {
+    start_stop_switch : bool;                  // 启停开关
+    binocular_complementary_brightness : float;                 // 双目补光亮度
+    binocular_speckle_brightness : float;                   // 双目散斑亮度
+    imu : bool;                    // IMU
+    lidar : bool;                  // 激光雷达
+    tof : bool;                    // ToF
+    tof_brightness : float;                 // ToF亮度
+    cliff_front_left : bool;                   // 悬崖(前左)
+    cliff_front_right : bool;                  // 悬崖(前右)
+    cliff_left : bool;                 // 悬崖(左)
+    cliff_right : bool;                    // 悬崖(右)
+    collision_front_left : bool;                   // 碰撞(前左)
+    collision_front_right : bool;                  // 碰撞(前右)
+    the_left_wheel_is_in_the_air : bool;                   // 左轮悬空
+    right_wheel_suspended : bool;                  // 右轮悬空
+    ultrasound_front_left : bool;                  // 超声(前左)
+    ultrasonic_front_left_detection_range : float;                  // 超声(前左)探测距离
+    ultrasound_front_right : bool;                 // 超声(前右)
+    ultrasonic_front_right_detection_range : float;                 // 超声(前右)探测距离
+    ultrasound_left : bool;                    // 超声(左)
+    ultrasonic_left_detection_range : float;                    // 超声(左)探测距离
+    ultrasound_right : bool;                   // 超声(右)
+    ultrasonic_right_detection_range : float;                   // 超声(右)探测距离
+    ultrasound_rear : bool;                    // 超声(后)
+    ultrasonic_detection_range : float;                 // 超声(后)探测距离
+    ultrasound_front_middle : bool;                    // 超声(前中)
+    ultrasonic_detection_front_middle : float;                 // 超声(前中)探测距离
+}
+
+// 其他单元
+table OtherUnit {
+    left_brake_assembly : bool;             // 左刹车组件
+    right_brake_assembly : bool;                // 右刹车组件
+    horn : bool;                // 喇叭
+    emergency_stop_button : bool;                   // 急停按钮
+    start_stop_switch : bool;                   // 启停开关
+    water_level_switch : bool;                  // 清水位开关
+    sewage_switch : bool;                   // 污水开关
+}
+
+// 设备单元数据
+union EquipmentUnitData {
+    CoreUnit,
+    MotorUnit,
+    SensorUnit,
+    OtherUnit,
+}
+
+// 操作类型 (读取、设置)
+enum OperType : byte {
+    Get = 0,                       // 读取
+    Set = 1,                        // 设置
+}
+
+// 参数数据
+table ParamData {
+    addr : short;                                  // 地址
+    value : float;                                  // 值
+}
+
+// 机器参数模块类型
+enum MachineParamsModule : byte {
+    WalkingMotor = 0,              // 行走电机
+    LeftAndRightBrushMotor,               // 左右刷电机
+    MainBrushMotor,                 // 主刷电机
+    BrushWirePusher,               // 刷盘线推器
+    WaterHangingWirePusher,               // 水挂线推器
+    SuctionPump,               // 吸力泵
+    CleanWaterPump,       // 清水泵
+    Battery,                           // 电池
+}
+
+// 行走电机
+table WalkingMotorParams {
+    rated_current : float;                  // 额定电流
+    overload_current : float;                   // 过载电流
+    overload_time : float;                  // 过载时间
+    maximum_speed : float;                  // 最大速度
+    forward_speed : float;                  // 前进速度
+    reverse_speed : float;                  // 后退速度
+}
+// 左右刷电机
+table LeftAndRightBrushMotorParams {
+    rated_current : float;                  // 额定电流
+    overload_current : float;                   // 过载电流
+    overload_time : float;                  // 过载时间
+}
+
+// 主刷电机
+table MainBrushMotorParams {
+    rated_current : float;                      // 额定电流
+    overload_current : float;                       // 过载电流
+    overload_time : float;                      // 过载时间
+    pressure_current_l : float;                     // 压力电流L档
+    pressure_current_m : float;                     // 压力电流M档
+    pressure_current_h : float;                     // 压力电流H档
+}
+
+// 刷盘线推器
+table BrushWirePusherParams {
+    rated_current : float;                          // 额定电流
+    overload_current : float;                           // 过载电流
+    overload_time : float;                          // 过载时间
+    uplink_timing_time : float;                         // 上行定时时间
+    downlink_timing_time : float;                         // 下行定时时间
+    initial_lifting_speed : float;                          // 初始升降速度
+    work_upgrade_speed : float;                         // 工作升级速度
+}
+
+// 水挂线推器
+table WaterHangingWirePusherParams {
+    rated_current  : float;                                 // 额定电流
+    overload_current   : float;                                 // 过载电流
+    overload_time  : float;                                 // 过载时间
+    uplink_timing_time : float;                                 // 上行定时时间
+    downlink_timing_time : float;                         // 下行定时时间
+    uplink_start_delay_tim : float;                                 // 上行启动延时时间
+    backward_rising_delay_time : float;                                 // 后退上升延时时间
+}
+
+// 吸力泵
+table SuctionPumpParams {
+    rated_curren : float;                       // 额定电流
+    overload_current : float;                       // 过载电流
+    overload_tim : float;                       // 过载时间
+    forward_state_off_de : float;                       // 前进状态关断延时
+    shutdown_delay_in_backward_state : float;                       // 后退状态关断延时
+}
+
+// 清水泵
+table CleanWaterPumpParams {
+    water_level : float;                // 水量档位
+    gear_1_flow : float;                // 1档流量
+    gear_2_flow : float;                // 2档流量
+}
+
+// 电池
+table BatteryParams {
+    battery_display_mode : bool;                    // 电池显示模式
+    gear_1_voltage : float;                 // 档1电压
+    gear_2_voltage : float;                 // 档2电压
+    gear_3_voltage : float;                 // 档3电压
+    gear_4_voltage : float;                 // 档4电压
+    gear_5_voltage : float;                 // 档5电压
+}
+
+// 机器参数请求数据
+table MachineParamRqst {
+    type : MachineParamsModule;           // 读取类型
+    param : ParamData;                                // 设置数据
+}
+
+// 机器参数数据
+union MachineParamData {
+    WalkingMotorParams ,                   // 行走电机
+    LeftAndRightBrushMotorParams,               // 左右刷电机
+    MainBrushMotorParams,                 // 主刷电机
+    BrushWirePusherParams,               // 刷盘线推器
+    WaterHangingWirePusherParams,               // 水挂线推器
+    SuctionPumpParams,               // 吸力泵
+    CleanWaterPumpParams,       // 清水泵
+    BatteryParams,                           // 电池
+}
+
+// 机器参数响应数据
+table MachineParamResp {
+    type : MachineParamsModule;           // 读取类型
+    data : MachineParamData;                   // 机器参数数据
+}
+
+// 工作模式数据
+table WorkingModeData {
+    economize : ModeSetting;       // 节能模式设置
+    strong : ModeSetting;                // 强力模式设置
+}
+
+// 工作时长数据
+table WorkingHoursData {
+    admin : HoursData;                       // 管理员工作时长
+    customer : HoursData;                 // 客户工作时长
+}
+
+// 设备测试类型
+enum TestingType : byte {
+    StartTesting = 0,     // 启动、关闭测试模式
+    SetSwitch = 1,        // 设置开关
+}
+
+// 测试项类型
+enum TestingItemType : byte {
+    MainBrushMotor = 0,                    // 主刷电机
+    LeftBrushMotor,                     // 左刷电机
+    RightBrushMotor,                    // 右刷电机
+    SuctionPump,                    // 吸力泵
+    BrushWirePusher,                    // 刷盘线推器
+    WaterHangingWirePusher,               // 水挂线推器
+    WaterPumpGear,                     // 清水泵档位
+    LeftBrakeAssembly,                  // 左刹车组件
+    RightBrakeAssembly,                     // 右刹车组件
+    Horn,                                            // 喇叭
+    LightBelt,                                           // 灯带
+}
+
+// 线推器
+enum WirePusherOper : byte {
+    Up = 0,         // 向上
+    Down,           // 向下
+    Stop,           // 停止
+}
+table WirePusher {
+    oper : WirePusherOper;
+}
+
+// 清水泵档位
+enum WaterPumpGearOper : byte {
+    Off = 0,            // 关闭
+    Gear1,          // 1档
+    Gear2,         // 2档
+}
+table WaterPumpGear {
+    oper : WaterPumpGearOper;
+}
+
+// 刹车
+enum BrakeOper : byte {
+    Brake = 0,          // 刹车
+    Release,          // 松开
+}
+table Brake {
+    oper : BrakeOper;
+}
+
+// 灯带
+enum LightBeltOper : byte {
+    Off = 0,                   // 熄灭
+    Start = 1,                 // 开关机
+    LeftTurn = 2,              // 左转向
+    RightTurn = 3,             // 右转向
+    Fault = 4,                 // 机械故障
+    NormalStandby = 5,         // 正常待机
+    MechanicalOperation1 = 6,  // 机械运行1
+    MechanicalOperation2 = 7,  // 机械运行2
+    AllLightsOff = 8,          // 全部关灯
+    QueryMode = 9,             // 查询模式
+    TestMode = 10,             // 测试模式
+}
+table LightBelt {
+    oper : LightBeltOper;
+}
+
+// 测试项数据
+union TestingItemData {
+    Switch,
+    WirePusher,
+    WaterPumpGear,
+    Brake,
+    LightBelt,
+}
+
+// 测试项
+table TestingItem {
+    type : TestingItemType;
+    data : TestingItemData;
+}
+
+// 设备测试启动时响应数据
+table EquipmentTestingResp {
+    main_brush_motor : bool;                    // 主刷电机
+    left_brush_motor : bool;                     // 左刷电机
+    right_brush_motor : bool;                    // 右刷电机
+    suction_pump : bool;                    // 吸力泵
+    horn : bool;                                            // 喇叭
+    brush_wire_pusher : WirePusherOper;                    // 刷盘线推器
+    water_hanging_wire_pusher : WirePusherOper;               // 水挂线推器
+    water_pump_gear : WaterPumpGearOper;                     // 清水泵档位
+    left_brake_assembly : BrakeOper;                  // 左刹车组件
+    right_brake_assembly : BrakeOper;                     // 右刹车组件
+    light_belt : LightBeltOper;                                           // 灯带
+}
+
+// 故障请求数据
+table FaultSettingData{
+    error : int;                        // 错误码
+    state : bool;                    // 状态 (打开、关闭)
+}
+union FaultSettingRqst {
+    Switch,                           // 读取错误列表(true和false都有效)
+    FaultSettingData,       // 故障请求数据
+}
+// 故障响应数据
+table FaultSettingResp {
+    fault_setting_list : [FaultSettingData];
+}
+
+// 工作模式项
+table ModeSetting {
+    walking_speed : short;           // 行走速度
+    main_brush_pressure : short;             // 主刷压力
+    water_volume : short;            // 水量
+}
+
+// 运行记录数据
+table RecordData {
+    mode : IntelligenceMode;                            // 智能清扫模式
+    start_time : long;                                              // 开始时间
+    stop_time : long;                                              // 结束时间
+    run_time : long;                                                // 运行时长
+    clean_area : long;                                             // 清扫面积
+    map_area : long;                                               // 地图面积
+}
+
+// 路径信息
+table RouteInfo {
+    exist_status : int;                   // 存在状态
+    track_mode : int;                // 清扫模式 0 : track(路径模式) 1 : edge(边界弓形模式) 2 : (边界回形模式)
+    site_code : string;               // 站点码->siteId
+    hlc_code : string;                // 定位码
+    slot_code : ubyte;               // 路径槽 (A-F)
+    route_id : string;                        // 路径ID
+    route_name : string;          // 用户自定义路径名称 "地下室1"->mapName/81000609
+    body_num : string;             // 机身号->81001103
+    machine_name : string;   // 机器自定义名称->机器名称/81001102
+    file_size : int;                         // 文件大小
+    time : int64;                            // 地图生成时间UTC
+    thumbnail_path : string; // 缩略图绝对路径
+    map_path : string;              // 地图绝对路径
+    track_path : string;              // 轨迹绝对路径
+    floor_name : string;            //mark对应的名称->过时不用
+    site_name  : string;            //站点名称->siteName/81001105
+    location_name : string;         //位置名（项目名）/8100110A
+}
+
+// 时长数据
+table HoursData {
+    total_teaching_time : uint32;                        // 教学总时长
+    total_manual_time : uint32;                          // 手动总时长
+    total_duration_autonomy : uint32;            // 自主总时长
+}
+
+// 工作日志
+table WorkLog {
+    site_code : string;
+    hlc_id : int;
+    slot_code : byte;
+    route_id : string;
+    start_time : int;
+    end_time : int;
+    usage_time : int;
+    code_length : int;
+    run_length : int;
+    cleaned_area : int;
+    dedup_clean_area : int;
+    avg_speed : int;
+    assist_count : int;
+    route_code : string;        // 路径名称
+    boot_card_num : int;
+    icon_code : string;         // 缩略图路径
+    work_class : WorkClass;         // 工作类型
+    work_time : int;            // 工作时长
+}
+
+// 深度学习-行人点
+struct PersonPoint {
+    x : double;
+    y : double;
+}
+
+// 深度学习-楼梯点
+struct ElevatorPoint {
+    lx : double;        // 左x
+    ly : double;        // 左y
+    rx : double;        // 右x
+    ry : double;        // 右y
+}
+
+// 定向点
+struct OrientedPoint {
+    x : float;          // X
+    y : float;          // Y
+    a : float;          // 角度
+}
+
+// 登录类型
+enum LoginType : byte {
+    HmiUser = 0,        // HMI客户
+    HmiUserAdmin,       // 管理员
+    CustomerManagement, // 客户管理
+}
+
+// 用户类型
+enum UserType : byte {
+    CustomerManagement = 0,        // HMI客户
+    HmiUserAdmin,       // HMI管理员
+    Owner4,             // 用户白密名
+    Owner5,             // 用户灰密名
+    Owner6,             // 用户蓝密名
+    Owner7,             // 用户黄密名1
+    Owner8,             // 用户黄密名2
+    Owner9,             // 用户黄密名3
+}
+
+// 登录用户
+table LoginUser {
+    type : UserType;                // 用户类型
+    name : string;                  // 用户名
+    pwd : string;                  // 密码
+}
+
+//////////////////// 请求类型 ////////////////////
+enum RequestType: byte {
+    // 开机
+    SelfTest = 0,                       // 开机-请求自检
+    HMI,                                      // 发送HMI版本
+
+    CleanMode,              // 清扫模式 (节能、强力)
+    Manual,                            // 请求手工模式 (启动、关闭)
+
+    // 扫码
+    Video,                                  // 请求图像视频 (无效,仅调试用)
+    ScanQR,                             // 请求扫描二维码 (绑定RqtVideo)
+
+    // 智能模式
+    TeachClean,                 // 示教清扫
+    AutoClean,                 // 自动清扫 (轨迹、边界)
+
+    // 功能
+    AboutThisMachine,         // 关于本机
+    OperationRecord,           // 运行记录
+    EquipmentStatus,          // 设备状态
+
+    // 地图管理
+    SiteRoutes,                       // 获取站点路径列表
+    DelRoute,                          // 删除路径
+    TransSlot,                         // 转换槽
+    DownloadRoute,           // 下载路径
+    
+    // 管理员模式
+    VerifyPassword,                // 验证密码
+    MachineParams,              // 机器参数
+    EquipmentTesting,          // 设备测试启动
+    EquipmentTestingItem,  // 设备测试设置
+    FaultSetting,                       // 故障设置
+
+    // 系统设置
+    WorkingMode,                    // 工作模式
+    WorkingHours,                   // 工作时长
+    ChangePassword,             // 修改密码
+
+    SiteCode,                           // 站点码
+    
+    SavingPower,
+    Standby,
+    OneButtonSwitch,              // 一键开关
+    PowerDown,                          // 请求下电
+    MotionControl,                      // 运动控制
+    SetVolume,                              // 设置音量
+    GetVolume,                              // 获取音量
+    EnableWifi,                              // 使能WiFi
+    FaultCode,                              // 故障码
+    AutoBorderRouteCleanWay,         // 自动边界路径清扫方式设置
+    GoHome,                                 // UI 控制回家
+    ResumeClean,                        // 恢复清扫
+    SetBright,                               // 设置亮度
+    GetBright,                              // 获取亮度
+    GetVcuData,                         // 获取VCU寄存器数据
+    SlamOptimize,                     // SLAM最终优化(在Teach.Close之前)
+    TestConsumables,              // 消耗品检测
+    CloseEquitment,                 // 关闭设备
+    ExitStandby,                    //退出待机
+    UpdateExceptionConfig,      // 更新异常配置
+    LockState,                  // 锁机状态
+    Login,                      // 登录
+    UpdatePwd,                  // 更新用户名密码
+    UserList,                  //  用户列表
+}
+
+//-----------------------------------------------------------------
+
+
+// 根节点
+table Public {}
+root_type Public;

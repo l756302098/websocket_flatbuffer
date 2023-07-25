@@ -1,0 +1,274 @@
+include "request.fbs";
+
+namespace swr;
+
+/////////////////////////////////////////////////////////////////////////
+// 具体数据类型
+/////////////////////////////////////////////////////////////////////////
+
+//-------------------------------响应据结构-----------------------------
+// 默认
+table ResponseNone {}
+
+// 清扫模式 (节能、强力)
+table ResponseCleanMode {
+    mode : CleanMode;       // 清扫模式
+}
+
+// 请求智能示教清扫模式
+table ResponseTeachClean {
+    state : CleanState;               // 清扫状态
+    thumbnail_path : string;  // 缩略图路径
+}
+
+// 自动清扫 (轨迹、边界)
+table ResponseAutoClean {
+    state : CleanState;                                       // 清扫状态
+    update_thumbnail : bool;                       // 更新缩略图
+    run_path: string;                               // 运行图路径
+}
+
+// Modem配置
+table ResponseModemConfig {
+    /// Machine
+    work_time_limit : int;                   // 开启工作时间限制
+    start_time : int;                                // 开始时分
+    end_time : int;                                 // 结束时分
+    timezone : string;                            // 时区
+    body_num2 : int;                            // 机身号
+    machine_name : string;               // 机器名称
+    hmi_admin_pwd : string;            // HMI管理员密码
+    /// SiteInfo
+    site_code : string;                           // 站点编号
+    location_name : string;                // 位置名
+    floor_name : string;                       // 楼层名
+    site_name : string;                         // 站点名
+    /// VCUData
+    total_work_time : int;                   // 总工作时长
+    total_pulse_count : int;                // 总车轮累计脉冲数
+    total_run_length : int;                  // 总运行距离
+    total_cleaned_area : int;             // 总清洁面积
+    undedup_cleaned_area : int;    // 总清洁面积(去重)
+}
+
+// 关于本机
+table ResponseAboutThisMachine {
+    model : string;                                  // 型号
+    fuselage_number : string;           // 机身号
+    equipment_name : string;          // 设备名称
+    project_area : string;                     // 项目/区域
+    hmi_version : string;                     // HMI版本
+    modem_version : string;             // Modem版本
+    vcu_version : string;                     // VCU版本
+    mcu_version : string;                   // MCU版本
+    ncu_version : string;                    // NCU版本
+    coprocessor_version : string;                 // 协处理器版本
+    battery_version : string;                           // 电池版本
+    hmi_serial_number : string;                  // HMI序列号
+    modem_serial_number : string;          // Modem序列号
+    vcu_serial_number : string;                  // VCU序列号
+    mcu_serial_number : string;                // MCU序列号
+    ncu_serial_number : string;                 // NCU序列号
+    coprocessor_serial_number : string;                 // 协处理器序列号
+    battery_serial_number : string;                          // 电池序列号
+    imsi : string;                                                              // IMSI
+    iccid : string;
+    wlan_mac : string;
+    // added for I18R-2280
+    imsee_pn : string;
+    imsee_sn : string;
+    tof_pn : string;
+    tof_sn : string;
+    laser_firmware_version: string;
+    laser_sn : string;
+    location_name : string;
+    product_sn : string;
+}
+
+// 运行记录
+table ResponseOperationRecord {
+    record_list : [WorkLog];             // 运行记录列表
+}
+
+// 设备状态
+table ResponseEquipmentStatus {
+    type : EquipmentUnitType;           // 单元类型
+    data : EquipmentUnitData;           // 单元数据
+}
+
+// 上报站点路径列表
+table ResponseSiteRoutes {
+    route_list : [RouteInfo];               // 路径数组
+    cloud_state : bool;                     // 云端状态
+}
+
+// 删除路径
+table ResponseDelRoute {
+    route : RouteIdent;                             // 路径标识
+}
+
+// 机器参数
+table ResponseMachineParams {
+    oper : OperType;                                        // 操作类型 (读取、设置)
+    data : MachineParamResp;                    // 响应数据
+}
+
+// 设备测试
+table ResponseEquipmentTesting {
+    state : bool;               // true-启动 false-关闭
+    data : EquipmentTestingResp;                    // 响应数据 (state为true时有效)
+}
+
+// 故障设置
+table ResponseFaultSetting {
+    oper : OperType;                                        // 操作类型 (读取、设置)
+    data : FaultSettingResp;                         // 响应数据
+}
+
+// 工作模式
+table ResponseWorkingMode {
+    oper : OperType;                           // 操作类型 (读取、设置)
+    data : WorkingModeData;         // 响应数据 (读取有效)
+}
+
+// 工作时长
+table ResponseWorkingHours {
+    oper : OperType;                            // 操作类型 (读取、设置)
+    data : WorkingHoursData;         // 响应数据 (读取有效)
+}
+
+// 站点码
+table ResponseSiteCode {
+    site_code : string;               // 站点码
+}
+
+// 请求节能
+table ResponseSavingPower {
+    success : bool;
+}
+
+// 请求休眠
+table ResponseStandby {
+    success : bool;
+}
+
+// 请求退出休眠
+table ResponseExitStandby {
+    success : bool;
+}
+
+// 获取音量
+table ResponseGetVolume {
+    volume : int;              // 音量
+}
+
+// 获取亮度
+table ResponseGetBright {
+    bright : int;              // 亮度
+}
+
+// 获取VCU寄存器数据
+table ResponseGetVcuData {
+    reg_id : [uint16];     // VCU寄存器地址列表
+    reg_data : [uint16];     // VCU寄存器数据列表
+}
+
+// 消耗品检测
+table ResponseTestConsumables {
+    consumables : bool;           // 消耗品 true-通过 false-不通过
+    charging_plug : bool;         // 充电插头 true-通过 false-不通过
+    safety_switch : bool;          // 安全开关 true-通过 false-不通过
+    handle_position : bool;     // 手柄位置 true-通过 false-不通过
+}
+
+// 锁机状态
+table ResponseLockState {
+    state : bool;           // 状态 true-锁机 false-解锁
+    body_num: string;        // 机身号
+}
+
+// 登录
+table ResponseLogin{
+    success : bool;           // 状态 true-登录成功 false-登录失败
+}
+
+// 修改密码
+table ResponseUpdatePwd{
+    success : bool;           // 状态 true-修改成功 false-修改失败
+}
+
+table ResponseUserList{
+    user_list : [LoginUser];
+}
+//-----------------------------------------------------------------
+
+
+/////////////////////////////////////////////////////////////////////////
+// Response 数据域
+/////////////////////////////////////////////////////////////////////////
+union ResponseDataField {
+    ResponseNone,                               // 默认响应
+
+    RequestSelfTest,                         // 自检
+
+    RequestCleanMode,                     // 清扫模式 (节能、强力)
+    RequestManual,                            // 手工模式 (启动、关闭)
+
+    // 扫码
+    RequestVideo,                                  // 请求图像视频 (无效,仅调试用)
+    RequestScanQR,                             // 请求扫描二维码 (绑定RqtVideo)
+
+    // 智能模式
+    ResponseTeachClean,                    // 示教清扫
+    ResponseAutoClean,                      // 自动清扫
+
+    // 功能
+    ResponseAboutThisMachine,        // 关于本机
+    ResponseOperationRecord,           // 运行记录
+    ResponseEquipmentStatus,          // 设备状态
+
+    // 地图管理
+    ResponseSiteRoutes,                        // 获取站点路径列表
+    RequestDelRoute,                             // 删除路径
+    RequestTransSlot,                            //  转换槽
+    RequestDownloadRoute,              // 下载路径
+
+    // 管理员模式
+    RequestVerifyPassword,                 // 验证密码
+    ResponseMachineParams,            // 机器参数
+    ResponseEquipmentTesting,          // 设备测试
+    RequestEquipmentTestingItem,  // 设备测试设置
+    ResponseFaultSetting,                   // 故障设置
+
+    // 系统设置
+    ResponseWorkingMode,                    // 工作模式
+    ResponseWorkingHours,                   // 工作时长
+    RequestChangePassword,                 // 修改密码
+
+    ResponseSiteCode,                           // 站点码
+    
+    ResponseSavingPower,
+    ResponseStandby,
+    ResponseGetVolume,                  // 获取音量
+    ResponseGetBright,                      // 获取亮度
+    ResponseGetVcuData,                 // 获取VCU寄存器数据
+    ResponseTestConsumables,     // 消耗品检测
+    ResponseExitStandby,            //退出待机
+    ResponseLockState,              //锁机状态
+    ResponseLogin,              //登录
+    ResponseUpdatePwd,          //修改密码
+    ResponseUserList,           //用户列表
+}
+
+
+/////////////////////////////////////////////////////////////////////////
+// Response 总结点
+/////////////////////////////////////////////////////////////////////////
+
+table Response {
+    status : int64;                                     // 错误码 0-成功 other-失败
+    type: RequestType;                            // 类型
+    message: ResponseDataField;     // 数据域
+}
+
+root_type Response;

@@ -1,0 +1,298 @@
+include "public.fbs";
+
+namespace swr;
+
+//-------------------------------上报据结构-----------------------------
+// 上报蓝色按钮触发
+table ReportBlueTrigger {
+    trigger : bool;            // 蓝色按钮 (此处任何值都是触发)
+}
+
+// 上报自检进度
+table ReportSelfTestProcess {
+    over : int;                // 完成检测数量
+    all : int;                    // 检测总数量
+}
+// 上报自检结果
+table ReportSelfTest {
+    error_list : [ErrorCode];   // 错误列表 (自检通过，列表为空；自检不通过，存储错误列表)
+}
+
+// 图像
+table ReportImage {
+    time: double;          // 时间
+    image: [ubyte];       // 左图
+}
+
+// 地图
+table ReportRosMap {
+    // width : int;                 // MAX: 2000
+    // height : int;               // MAX: 2000
+    // origin_x : int;           // image left top Point x
+    // origin_y : int;           // image left top Point y
+    // image: [ubyte];       //含识别信息图 -1 0 100
+    time: long;                     // 时间
+    grid_data : [float];      // 点数据数组
+}
+
+// 位姿
+table ReportPose {
+    x: float;
+    y: float;
+    z: float;
+    angle: float;
+}
+
+// 清扫时间
+table ReportCleanTime {
+    time : float;
+}
+// 清扫面积
+table ReportCleanArea {
+    area : float;
+}
+
+// 自动清扫
+table ReportAutoClean {
+    state : AutoCleanState;         // 自动清扫中间状态
+}
+
+enum ReportTitleBarType : byte {
+    ReportCloudState = 0,                 // 云端状态(在/离线)   触发
+    ReportNetLevel,                             // 网络信号水平    fz:10s
+    ReportBatteryLevel,                     // 电池水平  fz:30s
+}
+// 云端状态(在/离线)
+table ReportCloudState {
+    state : bool;     // 云端状态 true : 在线 false : 离线
+}
+// 网络信号水平
+table ReportNetLevel {
+    wifi : int;                                // wifi level: 3/2/1/0
+    four_g : int;                          // 4G   level: 4/3/2/1/0/-1
+}
+// 电池水平
+table ReportBatteryLevel {
+    battery : float;                // 电池电量(%)
+    charging : bool;             // 充电中
+}
+union ReportTitleBarData {
+    ReportCloudState,           // 云端状态(在/离线)
+    ReportNetLevel,                // 网络信号水平
+    ReportBatteryLevel,        // 电池水平
+}
+// 标题栏数据
+table ReportTitleBar {
+    type: ReportTitleBarType;
+    data: ReportTitleBarData;
+}
+
+// Marker类型
+enum ReprotMarkerType : byte {
+    MarkerTypeDistinguish = 0,          // 识别二维码
+    MarkerTypeCalculate,                    // 解算二维码
+}
+// 识别结果
+table ReportDistinguishRLT {
+    ltx : int;                                                     // 左上x
+    lty : int;                                                     // 左上y
+    rtx : int;                                                     // 右上x
+    rty : int;                                                     // 右上y
+    lbx : int;                                                     // 左下x
+    lby : int;                                                     // 左下y
+    rbx : int;                                                     // 右下x
+    rby : int;                                                     // 右下y
+}
+// 解算结果
+table ReportCalculateRLT {
+    site_code : string;                                // 站点码
+    hlc_code : string;                                 // 定位码
+}
+// Marker结果
+union ReportMarkerRLT {
+    ReportDistinguishRLT,                       // 识别结果
+    ReportCalculateRLT                           // 解算结果
+}
+// 上报识别二维码结果
+table ReportScanQR {
+    code : MarkerState;                             // 返回码 0:成功 other:失败
+    type : ReprotMarkerType;                // Marker类型
+    result : ReportMarkerRLT;                // Marker结果
+}
+
+// 地图路线 (map route) 相关
+// 站点信息
+table ReportSiteInfo {
+    site_code : string;                     // 站点码
+    site_name : string;                   // 站点名
+    floor_name : string;                // 楼层名
+    location_name : string;         // 位置名
+}
+
+// 上报路径信息
+table ReportRouteInfo {
+    route_list : [RouteInfo];               // 路径数组
+}
+
+// 下载数据类型
+enum DownloadDataType : byte  {
+    Invalid = 0,                      // 无效
+    Thumbnail = 1,              // 缩略图
+    Map = 2,                            // 地图
+    Track = 3,                         // 轨迹
+    All = 4,                    //All
+}
+// 下载进度
+table ReportDownloadProgress {
+    site_code : string;                // 站点码
+    hlc_code : string;                 // 定位码
+    slot_code : ubyte;               // 路径槽
+    route_id : string;                 // 路径Id
+    type : DownloadDataType;                  // 下载数据类型 1=缩略图，2=地图，3=轨迹
+    progress : int;                      // 下载进度, 9997表示99.97%, 10000表示完成
+    png_finish : bool;                  //缩略图是否下载完成
+}
+
+// 测试实时状态
+table ReportTestRealTimeStatus {
+    main_brush_motor_current : float;       // 主刷电机电流
+    suction_pump_current : float;       // 吸力泵电流
+    left_brush_motor_current : float;       // 左刷盘电机电流
+    right_brush_motor_current : float;      // 右刷盘电机电流
+    pusher_current_of_coil_line : float;        // 输盘线推器电流
+    wiper_wire_pusher_current : float;      // 水刮线推器电流
+    left_brake_assembly : float;        // 左刹车组件
+    right_brake_assembly : float;       // 右刹车组件
+    left_drive_current : float;         // 左驱动电流
+    right_drive_current : float;        // 右驱动电流
+}
+
+// 行人
+table ReportPerson {
+    person_list : [PersonPoint];
+}
+
+// 电梯
+table ReportElevator {
+    elevator_list : [ElevatorPoint];
+}
+
+// 下电
+table ReportPowerDown {
+    trigger : bool;    // 下电 true:触发下电请求 false:未触发下电请求
+}
+
+// 定向点列表
+table ReportOrientedPoint {
+    oriented_list : [OrientedPoint];
+}
+
+// 请求故障码
+table ReportFaultCode {
+    fault : FaultCode;
+}
+
+// 请求故障码
+table ReportLockFaultCode {
+    fault : LockFaultCode;
+}
+
+// 机器人事件
+table ReportRobotEvent {
+    event : uint32;
+    // event value //
+    // ROBOTEVENT_HOME_ARRIVED = 1
+}
+
+// 通知示教清扫SlamMap发送完成
+table ReportSlamMapSendCompleted {
+    send_completed : bool;      // true-发送完成 false-没有发送完成
+}
+
+//-----------------------------------------------------------------
+
+
+///////////////////////////////////////////
+// Report 类型
+///////////////////////////////////////////
+
+enum ReportType: byte {
+    ReportBlueTrigger = 0,                     // 蓝色按钮触发
+    ReportSelfTest,                                   // 上报自检结果
+    ReportSelfTestProcess,                   // 上报自检过程
+
+    ReportImage,                                       // 扫码时打开；扫码(成功/关闭)时关闭；
+    ReportRosMap,                                   // 智能清扫开始时打开；智能清扫停止(退出/取消)时关闭；
+    ReportPose,                                         // 智能清扫开始时打开；智能清扫停止(退出/取消)时关闭；
+    ReportCleanTime,                            // 清扫时间
+    ReportCleanArea,                            // 清扫面积
+
+    ReportAutoClean,                            // 自动清扫
+
+    ReportTitleBar,                                     // 标题栏数据
+    ReportScanQR,                                     // 二维码结果
+
+    ReportSiteInfo,                                     // 站点信息
+    ReportRouteInfo,                                // 扫码后路径信息
+    ReportDownloadProgress,             // 下载进度 (点击扫码后自动上报)
+
+    ReportTestRealTimeStatus,           // 测试实时状态
+
+    ReportError,                                         // 错误码
+    ReportPerson,                                     // 行人
+    ReportElevator,                                   // 电梯
+    ReportPowerDown,                        // 下电
+    ReportOrientedPoint,                    // 定向点
+    ReportFaultCode,                            // 故障码
+    ReportRobotEvent,                         // 机器人事件
+    ReportSlamMapSendCompleted,            // 通知示教清扫SlamMap发送完成
+    ReportLockFaultCode,                    // 锁机故障码
+}
+
+///////////////////////////////////////////
+// Report 数据域
+///////////////////////////////////////////
+
+union ReportDataField {
+    ReportBlueTrigger,                           // 蓝色按钮触发
+    ReportSelfTest,                                   // 上报自检结果
+    ReportSelfTestProcess,                   // 上报自检过程
+
+    ReportImage,                                       // 扫码时打开；扫码(成功/关闭)，关闭；
+    ReportRosMap,                                   // 智能清扫开始时打开；智能清扫停止(退出/取消)时关闭；
+    ReportPose,                                         // 智能清扫开始时打开；智能清扫停止(退出/取消)时关闭；
+    ReportCleanTime,                            // 清扫时间
+    ReportCleanArea,                            // 清扫面积
+
+    ReportAutoClean,                            // 自动清扫
+
+    ReportTitleBar,                                     // 标题栏数据
+    ReportScanQR,                                     // 二维码结果
+
+    ReportSiteInfo,                                     // 站点信息
+    ReportRouteInfo,                                // 扫码后路径信息
+    ReportDownloadProgress,             // 下载进度 (点击扫码后自动上报)
+
+    ReportTestRealTimeStatus,           // 测试实时状态
+
+    ErrorCode,                                         // 错误码
+    ReportPerson,                                     // 行人
+    ReportElevator,                                   // 电梯
+    ReportPowerDown,                        // 下电
+    ReportOrientedPoint,                    // 定向点
+    ReportFaultCode,                            // 故障码
+    ReportRobotEvent,                         // 机器人事件
+    ReportSlamMapSendCompleted,            // 通知示教清扫SlamMap发送完成
+    ReportLockFaultCode,                    //上报锁机异常
+}
+
+///////////////////////////////////////////
+// Report 总结点
+///////////////////////////////////////////
+
+table Report {
+  type: ReportType;
+  data: ReportDataField;
+}
+
+root_type Report;

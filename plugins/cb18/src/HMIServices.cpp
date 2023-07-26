@@ -31,7 +31,6 @@ int main(int argc,char** argv){
     wf.Accept([](bool connected){
         std::cout << "connected:" << connected <<  std::endl;
     });
-    wf.Start();
     std::vector<std::uint8_t> imagebuf;
     cv::Mat image = cv::imread("/home/li/test.png", cv::IMREAD_UNCHANGED);
     if (!cv::imencode(".png", image, imagebuf)) {
@@ -39,7 +38,8 @@ int main(int argc,char** argv){
                     << ", h:" << image.rows << std::endl;
         return 1;
     }
-    while (1)
+    int count = 60;
+    while (--count>0)
     {
         flatbuffers::FlatBufferBuilder rptbf;
         //report pose

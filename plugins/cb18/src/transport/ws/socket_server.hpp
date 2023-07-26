@@ -60,7 +60,17 @@ namespace swr
 
             // Start a thread to run the processing loop
             p_thread.reset(new websocketpp::lib::thread(websocketpp::lib::bind(&socket_server::process_messages, this)));
+            p_thread->detach();
             s_thread = std::make_shared<std::thread>(std::bind(&socket_server::send_process, this));
+            s_thread->detach();
+        }
+
+        ~socket_server(){
+            std::cout << "start ~socket_server" << std::endl;
+            this->open_func = nullptr;
+            this->close_func = nullptr;
+            this->msg_func = nullptr;
+            std::cout << "end ~socket_server" << std::endl;
         }
 
         void set_open(std::function<void()> func)
@@ -81,22 +91,29 @@ namespace swr
         void start()
         {
             socket_thread.reset(new websocketpp::lib::thread(&socket_server::run, this));
+            socket_thread->detach();
         }
 
         void stop()
         {
-            m_server.stop_listening();
+            if(m_server.is_listening())
+            {
+                m_server.stop_listening();
+            }
             running = false;
+            m_action_cond.notify_all();
             if (p_thread != nullptr && p_thread->joinable())
             {
                 p_thread->join();
                 p_thread = nullptr;
             }
+            send_cond.notify_all();
             if (s_thread != nullptr && s_thread->joinable())
             {
                 s_thread->join();
                 s_thread = nullptr;
             }
+            std::cout << "socket_server stop..." << std::endl;
         }
 
         void pending(std::shared_ptr<ws_message> package)
@@ -110,8 +127,8 @@ namespace swr
 
         void send(const uint8_t *buf, size_t size)
         {
-            con_list::iterator it;
-            for (it = m_connections.begin(); it != m_connections.end(); ++it)
+            lock_guard<mutex> guard(m_connection_lock);
+            for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
             {
                 websocketpp::lib::error_code ec;
                 m_server.send(*it, buf, size, websocketpp::frame::opcode::binary, ec);
@@ -142,10 +159,12 @@ namespace swr
             {
                 std::cout << e.what();
             }
+            std::cout << "run exit..." << std::endl;
         }
 
-        bool send_process()
+        void send_process()
         {
+            std::cout << "send start." << std::endl;
             while (running)
             {
                 std::unique_lock<std::mutex> lock(send_mtx);
@@ -153,15 +172,14 @@ namespace swr
                 {
                     send_cond.wait(lock);
                 }
-                if (send_queue.empty())
-                    continue;
+                if(!running) continue;
                 std::shared_ptr<ws_message> msg = send_queue.front();
                 send_queue.pop();
                 lock.unlock();
-
                 // SLOG(INFO) << "start send message. queue size:" << send_queue.size();
                 send(msg->get_data(), msg->get_data_size());
             }
+            std::cout << "send end." << std::endl;
         }
 
         void on_open(connection_hdl hdl)
@@ -197,18 +215,21 @@ namespace swr
 
         void process_messages()
         {
+            std::cout << "process start." << std::endl;
             while (running)
             {
+                std::cout << "process 1..." << std::endl;
                 unique_lock<mutex> lock(m_action_lock);
                 while (running && m_actions.empty())
                 {
                     m_action_cond.wait(lock);
                 }
-
+                std::cout << "process 2..." << std::endl;
+                if(!running) continue;
                 action a = m_actions.front();
                 m_actions.pop();
                 lock.unlock();
-
+                std::cout << "process 3..." << std::endl;
                 if (a.type == SUBSCRIBE)
                 {
                     lock_guard<mutex> guard(m_connection_lock);
@@ -239,7 +260,9 @@ namespace swr
                 {
                     // undefined.
                 }
+                std::cout << "process 4..." << std::endl;
             }
+            std::cout << "process end." << std::endl;
         }
 
     private:

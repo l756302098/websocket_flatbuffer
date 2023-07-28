@@ -13,6 +13,7 @@ int main(int argc,char** argv){
     std::function<bool(std::uint16_t, const swr::Request&)> f = 
         [](std::uint16_t id,const swr::Request& req){
             std::cout << "msg id:" << id << std::endl;
+            std::cout << "receive type:" << EnumNameRequestType(req.type()) << std::endl;
             switch (req.type())
             {
             case swr::RequestType::RequestType_Login:
@@ -21,7 +22,12 @@ int main(int argc,char** argv){
                     std::cout << "login success pwd:" << msg->pwd()->c_str() << std::endl;
                     break;
                 }
-            
+            case swr::RequestType::RequestType_SelfTest:
+                {
+                    auto msg = req.message_as_RequestSelfTest();
+                    std::cout << "request self test." << std::endl;
+                    break;
+                }
             default:
                 break;
             }
@@ -38,32 +44,35 @@ int main(int argc,char** argv){
                     << ", h:" << image.rows << std::endl;
         return 1;
     }
-    int count = 60;
-    while (--count>0)
+    wf.Start();
+    sleep(10);
+    // self-test
+    int count = 0;
+    while (++count<11)
     {
-        flatbuffers::FlatBufferBuilder rptbf;
+        //flatbuffers::FlatBufferBuilder rptbf;
         //report pose
-        int hz = 50;
-        while (--hz>0)
-        {
-            auto data = CreateReportPose(rptbf, 0, 0, 1, 90);
-            auto report =
-            CreateReport(rptbf, ReportType::ReportType_ReportPose,
-                        ReportDataField::ReportDataField_ReportPose, data.Union());
-            rptbf.Finish(report);
-            wf.SendReport(rptbf);
-        }
+        // int hz = 50;
+        // while (--hz>0)
+        // {
+        //     auto data = CreateReportPose(rptbf, 0, 0, 1, 90);
+        //     auto report =
+        //     CreateReport(rptbf, ReportType::ReportType_ReportPose,
+        //                 ReportDataField::ReportDataField_ReportPose, data.Union());
+        //     rptbf.Finish(report);
+        //     wf.SendReport(rptbf);
+        // }
         // report image
-        hz = 15;
-        while (--hz>0)
-        {
-            auto data = CreateReportImage(rptbf, 3.0, rptbf.CreateVector(imagebuf));
-            auto report = CreateReport(rptbf, ReportType::ReportType_ReportImage,
-                                    ReportDataField::ReportDataField_ReportImage,
-                                    data.Union());
-            rptbf.Finish(report);
-            wf.SendReport(rptbf);
-        }
+        // hz = 15;
+        // while (--hz>0)
+        // {
+        //     auto data = CreateReportImage(rptbf, 3.0, rptbf.CreateVector(imagebuf));
+        //     auto report = CreateReport(rptbf, ReportType::ReportType_ReportImage,
+        //                             ReportDataField::ReportDataField_ReportImage,
+        //                             data.Union());
+        //     rptbf.Finish(report);
+        //     wf.SendReport(rptbf);
+        // }
 
         //response
         flatbuffers::FlatBufferBuilder rpbf;
@@ -72,8 +81,49 @@ int main(int argc,char** argv){
         rpbf.Finish(response);
         wf.SendResponse(1,rpbf);
 
+        flatbuffers::FlatBufferBuilder builder;
+        auto data = CreateReportSelfTestProcess(builder, count, 10);
+        auto report = CreateReport(
+            builder, ReportType::ReportType_ReportSelfTestProcess,
+            ReportDataField::ReportDataField_ReportSelfTestProcess, data.Union());
+        builder.Finish(report);
+        wf.SendReport(builder);
+
         sleep(1);
     }
+
+    {
+        transport::ReportBuffer builder;
+        std::vector<flatbuffers::Offset<swr::ErrorCode>> errorList;
+        auto data =
+            CreateReportSelfTest(builder, builder.CreateVector(errorList));
+        auto report = CreateReport(
+            builder, ReportType::ReportType_ReportSelfTest,
+            ReportDataField::ReportDataField_ReportSelfTest, data.Union());
+        builder.Finish(report);
+        wf.SendReport(builder);
+        std::cout << "SendReport ReportSelfTest." << std::endl;
+    }
+
+    //report fault code
+    uint32_t code = 1;
+    while (1)
+    {
+        std::cout << "SendReport FaultCode." << std::endl;
+        swr::FaultCode fault(static_cast<uint32_t>(code),swr::FaultState::FaultState_On);
+
+        flatbuffers::FlatBufferBuilder builder;
+        auto data = CreateReportFaultCode(builder, &fault);
+        auto report = CreateReport(
+            builder, ReportType::ReportType_ReportFaultCode,
+            ReportDataField::ReportDataField_ReportFaultCode, data.Union());
+        builder.Finish(report);
+        wf.SendReport(builder);
+        
+        sleep(1);
+        code++;
+    }   
+
     std::cout << "exit..." << std::endl;
     imagebuf.clear();
     wf.Stop();

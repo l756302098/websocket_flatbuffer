@@ -41,9 +41,13 @@ namespace swr
             std::uint16_t id = 0;
             std::uint32_t body_size = 0;
             memcpy(&all_size, buf, ws_message::get_header_size());
+            if(all_size != size){
+                std::cerr << "unpackage_request size error.read size:" << all_size << " size:" << size << std::endl;
+                return nullptr;
+            }
             memcpy(&id, buf + ws_message::get_header_size(), ws_message::get_id_size());
             body_size = all_size - ws_message::get_header_size() - ws_message::get_id_size();
-            std::cout << "all_size:" << all_size << " id:" << id << " body_size:" << body_size << std::endl;
+            //std::cout << "unpackage_request all_size:" << all_size << " id:" << id << " body_size:" << body_size << std::endl;
             flatbuffers::Verifier verifer(buf + ws_message::get_header_size() + ws_message::get_id_size(), body_size);
             if (!VerifyRequestBuffer(verifer))
             {
@@ -68,9 +72,13 @@ namespace swr
             std::uint16_t id = 0;
             std::uint32_t body_size = 0;
             memcpy(&all_size, buf, ws_message::get_header_size());
+            if(all_size != size){
+                std::cerr << "unpackage_response size error." << std::endl;
+                return nullptr;
+            }
             memcpy(&id, buf + ws_message::get_header_size(), ws_message::get_id_size());
             body_size = all_size - ws_message::get_header_size() - ws_message::get_id_size();
-            std::cout << "all_size:" << all_size << " id:" << id << " body_size:" << body_size << std::endl;
+            std::cout << "unpackage_response all_size:" << all_size << " id:" << id << " body_size:" << body_size << std::endl;
             flatbuffers::Verifier verifer(buf + ws_message::get_header_size() + ws_message::get_id_size(), body_size);
             if (!VerifyResponseBuffer(verifer))
             {
@@ -95,9 +103,13 @@ namespace swr
             std::uint16_t id = 0;
             std::uint32_t body_size = 0;
             memcpy(&all_size, buf, ws_message::get_header_size());
+            if(all_size != size){
+                std::cerr << "unpackage_report size error." << std::endl;
+                return nullptr;
+            }
             memcpy(&id, buf + ws_message::get_header_size(), ws_message::get_id_size());
             body_size = all_size - ws_message::get_header_size() - ws_message::get_id_size();
-            std::cout << "all_size:" << all_size << " id:" << id << " body_size:" << body_size << std::endl;
+            std::cout << "unpackage_report all_size:" << all_size << " id:" << id << " body_size:" << body_size << std::endl;
             flatbuffers::Verifier verifer(buf + ws_message::get_header_size() + ws_message::get_id_size(), body_size);
             if (!VerifyReportBuffer(verifer))
             {

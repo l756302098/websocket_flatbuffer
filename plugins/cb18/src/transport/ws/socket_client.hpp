@@ -81,12 +81,26 @@ namespace swr
 
         void send(const uint8_t *buf, size_t size)
         {
-            if(!connected) return;
-            websocketpp::lib::error_code ec;
-            client.send(connect, buf, size, websocketpp::frame::opcode::binary, ec);
-            if (ec)
+            if(!connected) {
+                std::cerr<< "connected is false.";
+                return;
+            }
+            try
             {
-                std::cerr << "throw excetion:" << ec.message() << std::endl;
+                websocketpp::lib::error_code ec;
+                client.send(connect, buf, size, websocketpp::frame::opcode::binary, ec);
+                if (ec)
+                {
+                    std::cerr << "throw excetion:" << ec.message() << std::endl;
+                }
+            }
+            catch(const websocketpp::exception& e)
+            {
+                std::cerr<< "websocketpp error:" << e.what();
+            }
+            catch(...)
+            {
+                std::cerr<< "unknown errors.";
             }
         }
 

@@ -18,7 +18,6 @@ int main(int argc,char** argv){
         std::cout << "clientMs connected:" << connected << std::endl;
         isConnected = connected;
     });
-    clientMs.start();
 
     socket_client clientData(8766);
     message_handler handlerData;
@@ -27,27 +26,45 @@ int main(int argc,char** argv){
         std::cout << "clientData connected:" << connected << std::endl;
         isConnected = connected;
     });
-    clientData.start();
     
     while (!isConnected)
     {
         clientMs.start();
         clientData.start();
 
-        sleep(2);
+        sleep(3);
     }
     std::cout << "client connected success." << std::endl;
-    int count = 40;
+    int count = 100;
     while (--count > 0)
     {
+        // flatbuffers::FlatBufferBuilder reqfb;
+        // auto data = CreateRequestLogin(reqfb,swr::LoginType_HmiUser,reqfb.CreateString("657870"));
+        // auto request = CreateRequest(reqfb, swr::RequestType::RequestType_Login,
+        //             RequestDataField::RequestDataField_RequestLogin, data.Union());
+        // reqfb.Finish(request);
+
+        // std::shared_ptr<ws_message> msg = swr::package(reqfb);
+        // clientMs.send(msg->get_data(),msg->get_data_size());
+
+
         flatbuffers::FlatBufferBuilder reqfb;
-        auto data = CreateRequestLogin(reqfb,swr::LoginType_HmiUser,reqfb.CreateString("657870"));
-        auto request = CreateRequest(reqfb, swr::RequestType::RequestType_Login,
-                    RequestDataField::RequestDataField_RequestLogin, data.Union());
+        auto data = CreateRequestSelfTest(reqfb);
+        auto request = CreateRequest(reqfb, swr::RequestType::RequestType_SelfTest,
+                    RequestDataField::RequestDataField_RequestSelfTest, data.Union());
         reqfb.Finish(request);
 
         std::shared_ptr<ws_message> msg = swr::package(reqfb);
         clientMs.send(msg->get_data(),msg->get_data_size());
+
+        flatbuffers::FlatBufferBuilder reqfb1;
+        auto data1 = CreateRequestLockState(reqfb1,0);
+        auto request1 = CreateRequest(reqfb1, swr::RequestType::RequestType_LockState,
+                    RequestDataField::RequestDataField_RequestLockState, data1.Union());
+        reqfb1.Finish(request1);
+
+        std::shared_ptr<ws_message> msg1 = swr::package(reqfb1);
+        clientMs.send(msg1->get_data(),msg1->get_data_size());
 
         sleep(1);
     }

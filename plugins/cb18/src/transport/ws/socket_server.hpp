@@ -44,7 +44,7 @@ namespace swr
     class socket_server
     {
     public:
-        socket_server(uint16_t port) : running(true), m_port(port)
+        socket_server(uint16_t port) : m_port(port),running(true)
         {
             // Initialize Asio Transport
             m_server.set_access_channels(websocketpp::log::alevel::none);
@@ -127,37 +127,50 @@ namespace swr
 
         void send(const uint8_t *buf, size_t size)
         {
-            lock_guard<mutex> guard(m_connection_lock);
-            for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
+            try
             {
-                websocketpp::lib::error_code ec;
-                m_server.send(*it, buf, size, websocketpp::frame::opcode::binary, ec);
-                if (ec)
+                lock_guard<mutex> guard(m_connection_lock);
+                std::cout << "m_connections count:" << m_connections.size() << std::endl;
+                for (auto it = m_connections.begin(); it != m_connections.end(); ++it)
                 {
-                    std::cerr << "throw excetion:" << ec.message() << std::endl;
-                }
-                else
-                {
-                    std::cout << "send success." << std::endl;
+                    websocketpp::lib::error_code ec;
+                    m_server.send(*it, buf, size, websocketpp::frame::opcode::binary, ec);
+                    if (ec)
+                    {
+                        std::cerr<< "throw excetion:" << ec.message();
+                        
+                    }
                 }
             }
+            catch(const websocketpp::exception& e)
+            {
+                std::cerr<< "websocketpp error:" << e.what();
+            }
+            catch(...)
+            {
+                std::cerr<< "unknown errors.";
+            } 
         }
 
     private:
         void run()
         {
-            // listen on specified port
-            m_server.listen(m_port);
-            // Start the server accept loop
-            m_server.start_accept();
-            // Start the ASIO io_service run loop
             try
             {
+                // listen on specified port
+                m_server.listen(m_port);
+                // Start the server accept loop
+                m_server.start_accept();
+                // Start the ASIO io_service run loop
                 m_server.run();
             }
-            catch (const std::exception &e)
+            catch(const websocketpp::exception& e)
             {
-                std::cout << e.what();
+                std::cerr<< "websocketpp error:" << e.what();
+            }
+            catch(...)
+            {
+                std::cerr<< "unknown errors.";
             }
             std::cout << "run exit..." << std::endl;
         }
@@ -218,18 +231,18 @@ namespace swr
             std::cout << "process start." << std::endl;
             while (running)
             {
-                std::cout << "process 1..." << std::endl;
+                //std::cout << "process 1..." << std::endl;
                 unique_lock<mutex> lock(m_action_lock);
                 while (running && m_actions.empty())
                 {
                     m_action_cond.wait(lock);
                 }
-                std::cout << "process 2..." << std::endl;
+                //std::cout << "process 2..." << std::endl;
                 if(!running) continue;
                 action a = m_actions.front();
                 m_actions.pop();
                 lock.unlock();
-                std::cout << "process 3..." << std::endl;
+                //std::cout << "process 3..." << std::endl;
                 if (a.type == SUBSCRIBE)
                 {
                     lock_guard<mutex> guard(m_connection_lock);
@@ -250,7 +263,6 @@ namespace swr
                 }
                 else if (a.type == MESSAGE)
                 {
-                    lock_guard<mutex> guard(m_connection_lock);
                     if (this->msg_func)
                     {
                         this->msg_func(a.msg);
@@ -260,7 +272,7 @@ namespace swr
                 {
                     // undefined.
                 }
-                std::cout << "process 4..." << std::endl;
+                //std::cout << "process 4..." << std::endl;
             }
             std::cout << "process end." << std::endl;
         }

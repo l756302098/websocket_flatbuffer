@@ -67,6 +67,24 @@ public:
                     std::cout << "receive pose:" << pose->angle() << std::endl;
                     break;
                 }
+            case swr::ReportType::ReportType_ReportFaultCode:
+                {
+                    const swr::ReportFaultCode* code = report->data_as_ReportFaultCode();
+                    std::cout << "receive fault code:" << code->fault()->code() << std::endl;
+                    break;
+                }
+            case swr::ReportType::ReportType_ReportSelfTestProcess:
+                {
+                    const swr::ReportSelfTestProcess* test = report->data_as_ReportSelfTestProcess();
+                    std::cout << "receive self test:" << test->over() << " all:" << test->all() << std::endl;
+                    break;
+                }
+            case swr::ReportType::ReportType_ReportSelfTest:
+                {
+                    const swr::ReportSelfTest* test = report->data_as_ReportSelfTest();
+                    std::cout << "receive self error size:" << test->error_list()->size() << std::endl;
+                    break;
+                }
             default:
                 {
                     std::cerr << "not found handle." << std::endl;

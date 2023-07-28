@@ -36,9 +36,16 @@ bool WsFacade::Accept(std::function<void(bool connected)> f) {
     mMsSocket->set_handler([this](server::message_ptr ptr){
         const std::string& payload = ptr->get_payload();
         auto request = swr::unpackage_request((const uint8_t*)payload.c_str(),payload.size());
-        auto rlt = requestHandle(0, *request);
+        if(request==nullptr)
+        {
+            std::cerr << "request is null." << std::endl;
+        }
+        else
+        {
+            std::cout << "RequestType: " << EnumNameRequestType(request->type()) << std::endl;
+            requestHandle(0, *request);
+        } 
     });
-    mMsSocket->start();
     mDataSocket->set_open([this]() {
         {
             std::unique_lock<std::mutex> lck(mtxSenssionCounter);
@@ -53,7 +60,6 @@ bool WsFacade::Accept(std::function<void(bool connected)> f) {
             OnConnectionTriggered(false);
         }
     });
-    mDataSocket->start();
     return true;
 }
 
@@ -92,6 +98,9 @@ bool WsFacade::SendResponse(MessageId mid, ResponseBuffer& response) {
     std::lock_guard<std::mutex> lck(mtxSsnIns);
     auto package = swr::package(response);
     mMsSocket->send(package->get_data(),package->get_data_size());
+    auto resp = swr::unpackage_response(package->get_data(),package->get_data_size());
+    std::cout << "SendResponse RequestType: " << EnumNameRequestType(resp->type())
+     << std::endl;
     return true;
 }
 

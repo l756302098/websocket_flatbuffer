@@ -17,3 +17,5 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/websocketpp)
 add_subdirectory(${PROJECT_SOURCE_DIR}/plugins/hmi)
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/plugins/cb18)
+
+add_subdirectory(${PROJECT_SOURCE_DIR}/plugins/ws-json)
